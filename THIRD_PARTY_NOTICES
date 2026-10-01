@@ -1,0 +1,21 @@
+KoApiDoc third-party notices
+============================
+
+KoApiDoc bundles the following third-party software. Each component keeps its own
+license; these do not restrict the license of KoApiDoc itself.
+
+Runtime (bundled into the Custom UI)
+------------------------------------
+- swagger-ui-react / swagger-ui  - Apache-2.0  - https://github.com/swagger-api/swagger-ui
+- react, react-dom               - MIT         - https://github.com/facebook/react
+- js-yaml                        - MIT         - https://github.com/nodeca/js-yaml
+- @forge/bridge                  - Atlassian Forge terms - https://developer.atlassian.com/platform/forge/
+- @forge/resolver                - Atlassian Forge terms - https://developer.atlassian.com/platform/forge/
+
+Development only (not shipped)
+------------------------------
+- vite, @vitejs/plugin-react, vitest, eslint, typescript-eslint, prettier, typescript,
+  @forge/cli (various licenses, mostly MIT / Apache-2.0 / Atlassian).
+
+Transitive dependencies of the bundled packages carry their own licenses; run a
+license scan (e.g. `npx license-checker --production`) before each release and update this file.

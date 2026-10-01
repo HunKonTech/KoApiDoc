@@ -1,0 +1,25 @@
+modules:
+  macro:
+    - key: koapidoc-macro
+      title: KoApiDoc
+      description: Render an OpenAPI / Swagger specification
+      resource: macro-ui
+      resolver:
+        function: resolver
+      config:
+        resource: macro-ui # same bundle; App.tsx picks the mode from extension.macro.isConfiguring
+        openOnInsert: true
+  function:
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: macro-ui
+    path: static/macro-ui/dist
+permissions:
+  scopes: []
+  # No `external` section on purpose: no egress keeps "Runs on Atlassian" possible.
+app:
+  runtime:
+    name: nodejs22.x
+  # Created by `forge register`; replace the placeholder before deploying.
+  id: ari:cloud:ecosystem::app/REPLACE-WITH-ID-FROM-FORGE-REGISTER
