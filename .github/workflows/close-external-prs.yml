@@ -9,8 +9,12 @@ permissions:
 
 jobs:
   close:
-    # Only the repository owner may open pull requests.
-    if: github.event.pull_request.user.login != github.repository_owner
+    # Only the maintainer may open pull requests. (repository_owner is the
+    # HunKonTech organization, not a person, so it must not be used here.)
+    if: >-
+      github.event.pull_request.user.login != 'BenKoncsik' &&
+      github.event.pull_request.author_association != 'OWNER' &&
+      github.event.pull_request.author_association != 'MEMBER'
     runs-on: ubuntu-latest
     steps:
       - name: Comment and close
