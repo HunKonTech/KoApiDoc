@@ -102,6 +102,9 @@ GitHubon publikus repóba idegen alapból sem tud pusholni, csak forkolni és PR
 
 ## 5. Ütemterv (vázlat)
 
+Az 1. lépés részletei: [`docs/STEP-1.md`](STEP-1.md).
+
+
 1. Forge „hello world” makró saját dev site-on.
 2. Csatolmányból spec betöltés + Swagger UI render.
 3. Beillesztett szöveg, URL forrás, hibakezelés.
