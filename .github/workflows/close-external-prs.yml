@@ -9,14 +9,18 @@ permissions:
 
 jobs:
   close:
-    # Only the maintainer may open pull requests. (repository_owner is the
-    # HunKonTech organization, not a person, so it must not be used here.)
+    runs-on: self-hosted
+    # Allowed: the maintainer, and branches of this repository named claude/*
+    # (only people with write access can push those; fork PRs never match).
+    # repository_owner is the HunKonTech organization, not a person.
     if: >-
       github.event.pull_request.user.login != 'BenKoncsik' &&
       github.event.pull_request.author_association != 'OWNER' &&
-      github.event.pull_request.author_association != 'MEMBER'
-    runs-on: ubuntu-latest
+      github.event.pull_request.author_association != 'MEMBER' &&
+      !(github.event.pull_request.head.repo.full_name == github.repository &&
+        startsWith(github.event.pull_request.head.ref, 'claude/'))
     steps:
+      # Never check out or run code from the pull request here.
       - name: Comment and close
         env:
           GH_TOKEN: ${{ github.token }}
