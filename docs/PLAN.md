@@ -45,7 +45,9 @@ Ez **nem nyílt forráskód** (OSI definíció tiltja a módosítás korlátozá
 | PolyForm Noncommercial / CC BY-NC-ND | részben | ND = tiltja | ✔ | Kereskedelmi korlát → Confluence cégeknek nem jó |
 | Business Source License (BSL) | ✔ (Additional Use Grant-tal) | ✔ (módosítás engedett) | ✔ | Módosítást enged → nem illik |
 
-**Döntés:** publikus repó, *source-available, saját licenc* (`LICENSE` a repóban) + ugyanaz EULA-ként a Marketplace-en. Tartalom röviden:
+**Döntés:** publikus repó, a `LICENSE` fájl a „KoApiDoc License (Free Use, No Modification)” saját szöveg. Kész licenc nem illik pontosan: PolyForm Strict tiltja a módosítást, de a kereskedelmi használatot is; FSL/BSL engedi a módosítást (időzített nyitás, 2 év után Apache/MIT).
+
+Leírás: *source-available, saját licenc* (`LICENSE` a repóban) + ugyanaz EULA-ként a Marketplace-en. Tartalom röviden:
 - Ingyenes használat bárkinek, kereskedelmi célra is.
 - Módosítás, származékos mű, újraterjesztés, újrapublikálás **csak írásos engedéllyel**.
 - Külső hozzájárulást (kódot) nem fogadunk el → CLA nem kell.
