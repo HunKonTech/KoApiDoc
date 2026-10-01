@@ -128,3 +128,39 @@ forge lint
 - A macro config módban és nézet módban ugyanaz a bundle fut: a módot az extension context alapján kell megkülönböztetni.
 - A makró-paraméterek mérete korlátos lehet: nagy spec beillesztésénél ez problémát okozhat, ezért kerül a 2. lépésbe a csatolmány-támogatás.
 - A `forge deploy` development környezetbe megy, éles telepítést ne végezz.
+
+## Helyi tesztelés a saját gépeden
+
+A Forge app nem fut teljesen helyben: a kód az Atlassian felhőben fut, a saját gépedről a `forge tunnel` irányítja át a hívásokat. Ezért kell egy valódi (ingyenes) Confluence Cloud dev site.
+
+### Előfeltételek
+1. Atlassian fiók és ingyenes dev site: [go.atlassian.com/cloud-dev](https://go.atlassian.com/cloud-dev) (a Confluence terméket add hozzá).
+2. Node.js (a Forge által támogatott LTS) és npm.
+3. Forge CLI: `npm install -g @forge/cli`.
+4. Atlassian API token ([id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens)), majd `forge login`.
+5. Docker: a `forge tunnel` régebbi CLI-verziókhoz Dockert kért. Az aktuális verzió követelményét a `forge tunnel` első futtatásakor és a Forge dokumentációban ellenőrizd.
+
+### Egyszeri beállítás
+```bash
+git clone https://github.com/HunKonTech/KoApiDoc.git && cd KoApiDoc
+npm install && (cd static/macro-ui && npm install)
+forge register            # saját app-azonosító, mert a klón másik fejlesztőé
+forge deploy -e development
+forge install -e development   # Confluence + a dev site címe
+```
+
+### Napi fejlesztés
+- Nézet/UI fejlesztés: a Vite dev szerver fut helyben, a `forge tunnel` erre irányítja a Custom UI-t (a manifest `tunnel` portját a sablon alapján kell beállítani, hot reload működik).
+- Backend (resolver) módosításra a `forge tunnel` újratölti a kódot, nem kell `deploy`.
+- Manifest- vagy scope-változás után kötelező `forge deploy`, és scope-változásnál `forge install --upgrade`.
+- Logok: `forge logs`.
+
+### Teszt-forgatókönyv
+1. A dev site-on hozz létre egy oldalt, és szúrd be a „KoApiDoc” makrót.
+2. A beállításban illessz be egy Petstore JSON-t, majd egy YAML-t: mindkettő jelenjen meg.
+3. Illessz be hibás szöveget: érthető hibaüzenetet kell látnod.
+4. Próbáld sötét és világos témában, szerkesztő és megtekintő módban.
+
+### Fontos
+- Csak a `development` környezetbe telepíts: az éles (`production`) telepítés számlázást és valódi felhasználói hatást jelenthet.
+- A helyi teszthez sem kell fizetni: a dev site és a Forge ingyenes keret elég.
