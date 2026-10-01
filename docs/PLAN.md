@@ -13,10 +13,19 @@ Confluence app, amely Swagger/OpenAPI (2.0, 3.0, 3.1; JSON/YAML) specifikációt
 
 **Javaslat:** Cloud-first, Forge-dzsal. DC csak később, ha van igény (Atlassian a Server-t megszüntette, a DC is csökkenő piac).
 
+### Fiók és költségek
+- **Atlassian fiók:** ingyenes – https://id.atlassian.com/signup?application=mpac
+- **Ingyenes fejlesztői Confluence site:** https://go.atlassian.com/cloud-dev
+- **Marketplace partner (vendor) profil:** ingyenes, magánszemélyként is (saját név) – https://marketplace.atlassian.com/manage/vendor/create
+- **Listázás / review:** nincs díj. Ingyenes appnál nincs revenue share.
+- **Forge használat:** 2026. jan. 1. óta használatalapú, de **appenként havi ingyenes keret** van (pl. 200 000 GB-s compute, 0,1 GB KVS, 1 GB log). Csak a keret feletti részt számlázzák a fejlesztőnek. Egy kliensoldali renderelő (Custom UI, szinte nincs backend) várhatóan bőven a kereten belül marad.
+- Források: [Become a partner](https://developer.atlassian.com/platform/marketplace/become-a-partner/), [Listing Forge apps](https://developer.atlassian.com/platform/marketplace/listing-forge-apps/), [Forge pricing](https://developer.atlassian.com/platform/forge/forge-platform-pricing/)
+- Figyelem: a saját éles site-ra telepítés számlázást indíthat, tesztelni dev site-on kell.
+
 ### Marketplace publikálás lépései (Cloud/Forge)
-1. Atlassian developer fiók + `forge` CLI (`npm i -g @forge/cli`).
+1. Atlassian fiók + `forge` CLI (`npm i -g @forge/cli`).
 2. `forge create` → `forge deploy` → `forge install` saját dev site-ra (ingyenes dev Confluence site).
-3. Marketplace **vendor/partner** profil létrehozása.
+3. Marketplace **vendor/partner** profil létrehozása, Developer console-ban sharing engedélyezése, developer space publikálása.
 4. App listing: leírás, ikon, képernyőképek, **EULA/licenc link**, **Privacy Policy**, support elérhetőség.
 5. Ingyenes app: „Free” fizetési modell (nincs Atlassian revenue share).
 6. Atlassian review (biztonsági és minőségi ellenőrzés), utána publikus.
@@ -36,10 +45,10 @@ Ez **nem nyílt forráskód** (OSI definíció tiltja a módosítás korlátozá
 | PolyForm Noncommercial / CC BY-NC-ND | részben | ND = tiltja | ✔ | Kereskedelmi korlát → Confluence cégeknek nem jó |
 | Business Source License (BSL) | ✔ (Additional Use Grant-tal) | ✔ (módosítás engedett) | ✔ | Módosítást enged → nem illik |
 
-**Javaslat:** *Source-available, saját licenc* (`LICENSE` a repóban) + ugyanaz EULA-ként a Marketplace-en. Tartalom röviden:
+**Döntés:** publikus repó, *source-available, saját licenc* (`LICENSE` a repóban) + ugyanaz EULA-ként a Marketplace-en. Tartalom röviden:
 - Ingyenes használat bárkinek, kereskedelmi célra is.
 - Módosítás, származékos mű, újraterjesztés, újrapublikálás **csak írásos engedéllyel**.
-- Hozzájárulás (PR) esetén **CLA** (a hozzájáruló átadja a jogokat), hogy a licenc később változtatható legyen.
+- Külső hozzájárulást (kódot) nem fogadunk el → CLA nem kell.
 - Garancia és felelősség kizárása („AS IS”).
 - Irányadó jog (pl. magyar).
 
@@ -47,6 +56,14 @@ Ez **nem nyílt forráskód** (OSI definíció tiltja a módosítás korlátozá
 
 ### Harmadik fél függőségek
 A felhasznált könyvtárak licencét be kell tartani (pl. Swagger UI / Redoc: Apache-2.0 / MIT) → `THIRD_PARTY_NOTICES` fájl kell. Ezek a saját licencünket nem korlátozzák.
+
+### Repó: publikus, de csak a tulajdonos commitolhat
+GitHubon publikus repóba idegen alapból sem tud pusholni, csak forkolni és PR-t nyitni. Beállítások:
+- Nincs collaborator; **Branch protection / ruleset** a `main`-en (csak te, force-push tiltva).
+- `CONTRIBUTING.md`: „Külső pull requestet nem fogadunk el, hibát issue-ban jelezz.”
+- Opcionális: PR-ek automatikus lezárása GitHub Actionnel (pl. `superbrothers/close-pull-request`), vagy Settings → *Interaction limits*.
+- Issue-k nyitva maradhatnak hibabejelentésre (vagy kikapcsolhatók).
+- Fork technikailag nem tiltható publikus repónál; a módosítást csak a licenc tiltja.
 
 ## 3. Technológia (Cloud/Forge)
 
@@ -92,4 +109,3 @@ A felhasznált könyvtárak licencét be kell tartani (pl. Swagger UI / Redoc: A
 ## 6. Nyitott kérdések
 - Kell-e Data Center változat?
 - „Try it out” kell-e (egress miatt)?
-- Publikus (source-available) vagy privát repó?
