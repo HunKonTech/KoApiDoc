@@ -1,0 +1,29 @@
+{
+  "name": "koapidoc",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Confluence macro that renders OpenAPI / Swagger specifications.",
+  "license": "SEE LICENSE IN LICENSE",
+  "scripts": {
+    "build": "npm run build --prefix static/macro-ui",
+    "typecheck": "tsc --noEmit && npm run typecheck --prefix static/macro-ui",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "forge:lint": "forge lint",
+    "dev:local": "npm run dev:local --prefix static/macro-ui"
+  },
+  "dependencies": {
+    "@forge/resolver": "^2.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "@forge/cli": "^14.1.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^10.11.0",
+    "prettier": "^3.9.9",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.3"
+  }
+}

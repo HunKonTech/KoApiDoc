@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>KoApiDoc local preview</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: sans-serif;
+      }
+      header {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 8px 12px;
+        background: #f1f2f4;
+        border-bottom: 1px solid #ccc;
+      }
+      iframe {
+        width: 100%;
+        height: calc(100vh - 49px);
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>KoApiDoc local preview</strong>
+      <label
+        >Mode
+        <select id="mode">
+          <option value="view">view</option>
+          <option value="config">config</option>
+        </select>
+      </label>
+      <label
+        >Spec
+        <select id="spec">
+          <option value="petstore-json">Petstore JSON</option>
+          <option value="petstore-yaml">Petstore YAML</option>
+          <option value="saved">Saved from config</option>
+          <option value="bad">Invalid</option>
+          <option value="empty">Empty</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="dark" /> Dark</label>
+    </header>
+    <iframe id="frame" title="macro"></iframe>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const load = () => {
+        const q = new URLSearchParams({ mode: $('mode').value, spec: $('spec').value });
+        if ($('dark').checked) q.set('dark', '1');
+        $('frame').src = '/index.html?' + q;
+      };
+      for (const id of ['mode', 'spec', 'dark']) $(id).addEventListener('change', load);
+      // After saving in config mode, show the saved spec in view mode.
+      window.addEventListener('message', (e) => {
+        if (e.data?.type === 'koapidoc-submit' || e.data?.type === 'koapidoc-close') {
+          $('mode').value = 'view';
+          if (e.data.type === 'koapidoc-submit') $('spec').value = 'saved';
+          load();
+        }
+      });
+      load();
+    </script>
+  </body>
+</html>

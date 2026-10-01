@@ -1,0 +1,7 @@
+node_modules
+dist
+package-lock.json
+LICENSE
+docs
+README.md
+CONTRIBUTING.md
