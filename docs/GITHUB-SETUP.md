@@ -55,7 +55,8 @@ To be stricter, drop the `claude/**` exclusion and add the Claude GitHub App to 
 - Settings > Actions > General:
   - "Fork pull request workflows from outside collaborators": **Require approval for all outside collaborators**.
   - Workflow permissions: **Read repository contents** by default.
-- The self-hosted runner runs `close-external-prs.yml` only (`pull_request_target`, never checks out PR code). Do not use it for other workflows on a public repository.
+- All workflows run on GitHub-hosted runners. Do not add a self-hosted runner to a public repository: `close-external-prs.yml` (`pull_request_target`) starts for every pull request without approval.
+  - Settings > Actions > General: tick **Require actions to be pinned to a full-length commit SHA** (the workflows pin every action).
 - Settings > Code security: enable **Private vulnerability reporting**, **Dependabot alerts** and **Secret scanning with push protection**.
 
 ## 4. Wiki and Issues

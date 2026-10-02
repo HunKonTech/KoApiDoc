@@ -9,7 +9,9 @@ permissions:
 
 jobs:
   close:
-    runs-on: self-hosted
+    # GitHub-hosted on purpose: anyone can open a pull request in a public repository, and
+    # pull_request_target starts this job without approval.
+    runs-on: ubuntu-latest
     # Allowed: the maintainer, Dependabot (only acts if enabled in the repository
     # settings, see docs/RELEASING.md), and branches of this repository named claude/*
     # (only people with write access can push those; fork PRs never match).
