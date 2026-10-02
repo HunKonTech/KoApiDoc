@@ -16,6 +16,9 @@ Development only (not shipped)
 ------------------------------
 - vite, @vitejs/plugin-react, vitest, eslint, typescript-eslint, prettier, typescript,
   @forge/cli (various licenses, mostly MIT / Apache-2.0 / Atlassian).
+- jsdom, @testing-library/react, @testing-library/dom, @testing-library/user-event (MIT),
+  used by the component tests only; the root copies of react / react-dom / @types/react are
+  test-only too (the shipped React comes from static/macro-ui).
 
 Transitive dependencies of the bundled packages carry their own licenses; run a
 license scan (e.g. `npx license-checker --production`) before each release and update this file.

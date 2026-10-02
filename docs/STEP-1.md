@@ -155,6 +155,13 @@ forge install -e development   # Confluence + a dev site címe
 - Manifest- vagy scope-változás után kötelező `forge deploy`, és scope-változásnál `forge install --upgrade`.
 - Logok: `forge logs`.
 
+### Csatolmány-mód helyben (2. lépés, Atlassian nélkül)
+`npm run dev:local`, majd a `local.html` fejlécében:
+- **Spec → Page attachment** csoport: a nézet a mock oldal csatolmányát tölti be (`petstore.json`, `petstore.yaml`, `multi-tag-3.1.json`, `with-external-ref.json`, valamint egy törölt csatolmányra mutató config).
+- **Mode = config** és **Page attachment** forrás: a lista csak a `.json/.yaml/.yml` fájlokat mutatja (névvel, mérettel); mentés után a „Saved from config” nézet a kiválasztott csatolmányt jeleníti meg.
+- **Failure**: `forbidden`, `missing`, `toolarge`, `notext`, `slow` (20 s, a 15 s-os időkorlát után hibaüzenet). Mindegyik érthető angol hibaüzenetet ad.
+- **External $ref**: figyelmeztetés látszik, a spec többi része megjelenik, külső kérés nincs.
+
 ### Teszt-forgatókönyv
 1. A dev site-on hozz létre egy oldalt, és szúrd be a „KoApiDoc” makrót.
 2. A beállításban illessz be egy Petstore JSON-t, majd egy YAML-t: mindkettő jelenjen meg.
