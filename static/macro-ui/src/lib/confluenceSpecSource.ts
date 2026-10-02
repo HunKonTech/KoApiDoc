@@ -39,9 +39,7 @@ export class ConfluenceSpecSource implements SpecSource {
         const info = toAttachmentInfo(item);
         if (info) result.push(info);
       }
-      const next = (body as { _links?: { next?: unknown } })._links?.next;
-      // Only follow links that stay on the same API.
-      path = typeof next === 'string' && next.startsWith('/wiki/api/v2/') ? next : null;
+      path = nextPath((body as { _links?: { next?: unknown } })._links?.next);
     }
     return result;
   }
@@ -54,16 +52,28 @@ export class ConfluenceSpecSource implements SpecSource {
     const meta = await this.getJson(`/wiki/api/v2/attachments/${attachmentId}`);
     const info = toAttachmentInfo(meta);
     if (!info) throw badResponse('attachment');
-    const owner = (meta as { pageId?: unknown }).pageId;
-    if (owner !== undefined && String(owner) !== pageId) throw new SpecSourceError('missing');
+    // Only attachments of this page: not of another page, blog post or custom content,
+    // and not one whose owner Confluence does not report.
+    const { pageId: page, blogPostId, customContentId } = meta as Record<string, unknown>;
+    const owner = page ?? blogPostId ?? customContentId;
+    if ((typeof owner !== 'string' && typeof owner !== 'number') || String(owner) !== pageId) {
+      throw new SpecSourceError('missing');
+    }
     if (!isSupportedSpecFile(info)) throw new SpecSourceError('unsupported');
-    if (info.fileSize > MAX_SPEC_BYTES) throw new SpecSourceError('too-large');
+    const { fileSize } = meta as Record<string, unknown>;
+    if (typeof fileSize !== 'number' || !(fileSize >= 0)) {
+      throw new SpecSourceError('failed', 'Confluence did not report the attachment size.');
+    }
+    if (fileSize > MAX_SPEC_BYTES) throw new SpecSourceError('too-large');
 
     const id = attachmentId.startsWith('att') ? attachmentId : `att${attachmentId}`;
     const response = await this.send(
       `/wiki/rest/api/content/${pageId}/child/attachment/${id}/download`,
     );
-    const bytes = await this.withTimeout(readBytes(response));
+    // The metadata may be out of date: the download is limited too.
+    const length = Number(response.headers?.get('Content-Length') ?? NaN);
+    if (length > MAX_SPEC_BYTES) throw new SpecSourceError('too-large');
+    const bytes = await this.withTimeout(readBytes(response, MAX_SPEC_BYTES));
     if (bytes.byteLength > MAX_SPEC_BYTES) throw new SpecSourceError('too-large');
     const text = decodeText(bytes);
     if (text === null) throw new SpecSourceError('not-text');
@@ -110,6 +120,27 @@ export class ConfluenceSpecSource implements SpecSource {
   }
 }
 
+/** Stands in for the Confluence site, so relative links can be resolved and compared. */
+const SITE = 'https://confluence.invalid';
+
+/**
+ * The path of a pagination link, if it stays on the same API: resolved first, so
+ * `..` (also as `%2e%2e`) and `//other.host` cannot lead elsewhere. Encoded
+ * slashes are refused, as a server might decode them into path separators.
+ */
+function nextPath(next: unknown): string | null {
+  if (typeof next !== 'string') return null;
+  let url: URL;
+  try {
+    url = new URL(next, SITE);
+  } catch {
+    return null;
+  }
+  if (url.origin !== SITE || !url.pathname.startsWith('/wiki/api/v2/')) return null;
+  if (/%2f|%5c/i.test(url.pathname)) return null;
+  return url.pathname + url.search;
+}
+
 function checkId(id: string, pattern: RegExp) {
   // IDs end up in URL paths: never let anything else through.
   if (!pattern.test(id)) throw new SpecSourceError('missing', `Invalid identifier: "${id}".`);
@@ -131,7 +162,33 @@ function toAttachmentInfo(item: unknown): AttachmentInfo | null {
   };
 }
 
-async function readBytes(response: Response): Promise<Uint8Array> {
+/**
+ * Reads the body, stopping as soon as it is over `limit` bytes when the response
+ * can be streamed. Otherwise it is read whole and the caller checks the size.
+ */
+async function readBytes(response: Response, limit: number): Promise<Uint8Array> {
+  if (typeof response.body?.getReader === 'function') {
+    const reader = response.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > limit) {
+        await reader.cancel().catch(() => {});
+        throw new SpecSourceError('too-large');
+      }
+      chunks.push(value);
+    }
+    const bytes = new Uint8Array(size);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    return bytes;
+  }
   if (typeof response.arrayBuffer === 'function') {
     return new Uint8Array(await response.arrayBuffer());
   }

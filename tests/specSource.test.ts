@@ -145,12 +145,36 @@ describe('ConfluenceSpecSource.listAttachments', () => {
     ]);
   });
 
-  it('does not follow links to other hosts', async () => {
-    const { request, source } = confluence(() =>
-      json({ results: [], _links: { next: 'https://evil.example.com/x' } }),
-    );
+  it.each([
+    'https://evil.example.com/x',
+    'https://evil.example.com/wiki/api/v2/x',
+    '//evil.example.com/wiki/api/v2/x',
+    '/wiki/api/v2/../../rest/x',
+    '/wiki/api/v2/%2e%2e/%2E%2E/rest/x',
+    '/wiki/api/v2/..%2f..%2frest/x',
+    '/wiki/api/v2/..%5C..%5Crest/x',
+    '/wiki/rest/api/x',
+    42,
+  ])('does not follow the link %j', async (next) => {
+    const { request, source } = confluence(() => json({ results: [], _links: { next } }));
     await source.listAttachments('123');
     expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  it('follows the normalised path of a link that stays on the API', async () => {
+    const { request, source } = confluence((path) =>
+      json({
+        results: [],
+        _links: path.includes('cursor')
+          ? {}
+          : { next: '/wiki/api/v2/x/../pages/123/attachments?cursor=a#b' },
+      }),
+    );
+    await source.listAttachments('123');
+    expect(request.mock.calls.map((c) => c[0])).toEqual([
+      '/wiki/api/v2/pages/123/attachments?limit=250',
+      '/wiki/api/v2/pages/123/attachments?cursor=a',
+    ]);
   });
 
   it.each([
@@ -199,6 +223,17 @@ describe('ConfluenceSpecSource.loadAttachment', () => {
     ]);
   });
 
+  it.each([
+    ['a numeric page id', { pageId: 123 }],
+    ['a blog post id', { pageId: undefined, blogPostId: '123' }],
+    ['a custom content id', { pageId: undefined, customContentId: '123' }],
+  ])('loads an attachment whose owner is given as %s', async (_, owner) => {
+    const { source } = confluence((path) =>
+      path === download ? new Response(petstore) : json(meta(owner)),
+    );
+    await expect(source.loadAttachment('123', 'att1')).resolves.toBe(petstore);
+  });
+
   it('adds the att prefix for the v1 download', async () => {
     const { request, source } = confluence((path) =>
       path.endsWith('/download') ? new Response('{}') : json(meta({ id: '1' })),
@@ -212,10 +247,91 @@ describe('ConfluenceSpecSource.loadAttachment', () => {
     ['not a spec file', meta({ title: 'notes.txt' }), 'unsupported'],
     ['an image', meta({ title: 'x.json', mediaType: 'image/png' }), 'unsupported'],
     ['on another page', meta({ pageId: '999' }), 'missing'],
+    ['without an owner', meta({ pageId: undefined }), 'missing'],
+    ['owned by null', meta({ pageId: null }), 'missing'],
+    ['on another blog post', meta({ pageId: undefined, blogPostId: '999' }), 'missing'],
+    ['on other custom content', meta({ pageId: undefined, customContentId: '999' }), 'missing'],
   ])('does not download an attachment that is %s', async (_, body, expected) => {
     const { request, source } = confluence(() => json(body));
     expect(await code(source.loadAttachment('123', 'att1'))).toBe(expected);
     expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['missing', { fileSize: undefined }],
+    ['a string', { fileSize: '1000' }],
+    ['negative', { fileSize: -1 }],
+  ])('does not download an attachment whose size is %s', async (_, size) => {
+    const { request, source } = confluence(() => json(meta(size)));
+    const err = await source.loadAttachment('123', 'att1').catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(SpecSourceError);
+    expect((err as SpecSourceError).code).toBe('failed');
+    expect((err as SpecSourceError).message).toBe('Confluence did not report the attachment size.');
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not read a download whose Content-Length is over the limit', async () => {
+    const response = new Response(petstore, { headers: { 'Content-Length': '3000000' } });
+    const { source } = confluence((path) => (path === download ? response : json(meta())));
+    expect(await code(source.loadAttachment('123', 'att1'))).toBe('too-large');
+    expect(response.bodyUsed).toBe(false);
+  });
+
+  /** A body that sends `chunk` `times` times (endlessly without `times`). */
+  function stream(chunk: Uint8Array, times = Infinity) {
+    const cancel = vi.fn();
+    let sent = 0;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (sent++ < times) controller.enqueue(chunk);
+        else controller.close();
+      },
+      cancel,
+    });
+    return { body, cancel, pulled: () => sent };
+  }
+
+  it('stops reading a download as soon as it is over the limit', async () => {
+    // Confluence reported 1000 bytes, but the body does not end.
+    const endless = stream(new Uint8Array(512 * 1024).fill(0x20));
+    const { source } = confluence((path) =>
+      path === download ? new Response(endless.body) : json(meta()),
+    );
+    expect(await code(source.loadAttachment('123', 'att1'))).toBe('too-large');
+    expect(endless.cancel).toHaveBeenCalledTimes(1);
+    expect(endless.pulled()).toBeLessThanOrEqual(6);
+  });
+
+  it('reads a streamed download in chunks', async () => {
+    const bytes = new TextEncoder().encode(petstore);
+    const half = Math.ceil(bytes.length / 2);
+    const chunks = [bytes.slice(0, half), bytes.slice(half)];
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        const next = chunks.shift();
+        if (next) controller.enqueue(next);
+        else controller.close();
+      },
+    });
+    const { source } = confluence((path) =>
+      path === download ? new Response(body) : json(meta()),
+    );
+    await expect(source.loadAttachment('123', 'att1')).resolves.toBe(petstore);
+  });
+
+  it('checks the size of a download without a stream after reading it', async () => {
+    const bridgeLike = (text: string) =>
+      ({
+        ok: true,
+        status: 200,
+        arrayBuffer: async () => new TextEncoder().encode(text).buffer,
+      }) as unknown as Response;
+    const small = confluence((path) => (path === download ? bridgeLike(petstore) : json(meta())));
+    await expect(small.source.loadAttachment('123', 'att1')).resolves.toBe(petstore);
+    const big = confluence((path) =>
+      path === download ? bridgeLike('x'.repeat(MAX_SPEC_BYTES + 1)) : json(meta()),
+    );
+    expect(await code(big.source.loadAttachment('123', 'att1'))).toBe('too-large');
   });
 
   it('rejects downloads that turn out too large or binary', async () => {

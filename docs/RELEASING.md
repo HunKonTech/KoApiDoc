@@ -49,7 +49,10 @@ earlier shape; the unit tests cover them). Never remove a field reader without a
    ```
 
 5. Vulnerabilities: `npm audit --omit=dev --prefix static/macro-ui` (what is shipped) must have no
-   high or critical finding. `npm audit` of the root (development tools, mainly `@forge/cli`) is
+   high or critical finding. Workflows: `zizmor .github` must have no medium or
+   higher finding (every action pinned to a commit SHA, no persisted credentials) except
+   `dangerous-triggers` on `close-external-prs.yml`, which checks out no code and only closes the
+   pull request (accepted in the security audit). `npm audit` of the root (development tools, mainly `@forge/cli`) is
    recorded in the release notes of the step; see "Known audit exceptions" below.
 6. Licenses: `npm run licenses`; check that no GPL, LGPL or AGPL package is in the bundle and update
    `THIRD_PARTY_NOTICES` (the step 4 procedure, from the build's source maps, is in
@@ -99,15 +102,20 @@ permissions, the fix must not remove them in a hurry: that would be another majo
 
 ## Dependency updates
 
-Dependabot is not enabled; dependencies are updated by hand before each release and at least
-monthly (`npm outdated`, `npm audit`, both packages). The workflow that closes external pull
-requests lets Dependabot's pull requests through, so it can be enabled later in the repository
-settings without changes here.
+npm dependencies are updated by hand before each release and at least monthly (`npm outdated`,
+`npm audit`, both packages); Dependabot security updates are off. Dependabot only proposes updates
+of the GitHub Actions, monthly (`.github/dependabot.yml`): the workflows pin each action to a
+commit SHA, and the pull request updates the SHA and its version comment. Check the action's
+release notes before merging. The workflow that closes external pull requests lets Dependabot's
+pull requests through.
 
 Swagger UI updates need extra care: the search plugin, the dark mode and the display options
 depend on its internals. After an update run the e2e tests and look at the screenshots.
 
 ## Known audit exceptions
+
+Last checked: 2 October 2026 (security audit, finding KOA-10; see
+[`security/SECURITY-AUDIT-2026-10-02.md`](security/SECURITY-AUDIT-2026-10-02.md)).
 
 | Package | Where | Why it is accepted |
 | --- | --- | --- |

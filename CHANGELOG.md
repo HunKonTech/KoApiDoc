@@ -22,8 +22,9 @@ First Marketplace release (Confluence Cloud, Forge).
   limit, timeouts and specifications that break the renderer.
 - References to external files are not loaded; they are shown as placeholders with a note.
 - Remote images in descriptions are blocked (Content Security Policy).
-- YAML alias bombs (documents that expand to more than 2,000,000 values) are rejected with a
-  message instead of freezing the browser.
+- Specifications above 2 MB (pasted text as well as attachments) and documents with more than
+  2,000,000 values (for example YAML alias bombs) are rejected with a message instead of freezing
+  the browser; the configuration does not save pasted text above these limits.
 
 ### Known limitations
 

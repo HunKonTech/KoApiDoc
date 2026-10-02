@@ -1,19 +1,19 @@
 # KoApiDoc – biztonsági javítási terv
 
 Forrás: [`SECURITY-AUDIT-2026-10-02.md`](SECURITY-AUDIT-2026-10-02.md) (17 találat: 5 közepes, 8
-alacsony, 4 info, kritikus/magas nincs). Állapot: az 1. és a 2. lépés kész (PR #15); a 3–5. lépés részletes terve: [`REMEDIATION-PLAN-3-5.md`](REMEDIATION-PLAN-3-5.md). Atlassian site-ra
+alacsony, 4 info, kritikus/magas nincs). Állapot: az 1. és a 2. lépés kész ([#15](https://github.com/HunKonTech/KoApiDoc/pull/15)), a 3. és az 5. lépés kész ([#17](https://github.com/HunKonTech/KoApiDoc/pull/17)); a 4. lépés (repóbeállítások) kézi admin teendő, a 6. (élő ellenőrzés) még hátra van. A 3–5. lépés részletes terve: [`REMEDIATION-PLAN-3-5.md`](REMEDIATION-PLAN-3-5.md); a találatonkénti állapot az audit riportban. Atlassian site-ra
 csak a 6. lépésben települ valami (dev site), és az is csak külön jóváhagyással.
 
 ## Áttekintés
 
-| #   | Lépés                         | Találatok                               | Súlyosság (max) | Függ                 | Forma            |
-| --- | ----------------------------- | --------------------------------------- | --------------- | -------------------- | ---------------- |
-| 1   | Authorize út lezárása + CSP   | KOA-01, KOA-02                          | Közepes         | –                    | PR               |
-| 2   | CI-hardening                  | KOA-05, KOA-03, KOA-04, KOA-12          | Közepes         | –                    | PR               |
-| 3   | Bemenetkezelés                | KOA-06, KOA-07, KOA-08, KOA-09, KOA-14, KOA-15 | Alacsony | 1 (fixture mappa)    | PR               |
-| 4   | Repó-beállítások              | KOA-11                                  | Alacsony        | 2 (SHA-pinning után) | kézi, GitHub UI  |
-| 5   | Dokumentáció                  | KOA-13, KOA-10, KOA-16, KOA-17          | Alacsony/info   | 1, 3                 | PR               |
-| 6   | Élő ellenőrzés Forge dev site-on | KOA-01, KOA-02 (+ KOA-07 nyitott kérdés) | –          | 1                    | kézi             |
+| #   | Lépés                         | Találatok                               | Súlyosság (max) | Függ                 | Forma            | Állapot |
+| --- | ----------------------------- | --------------------------------------- | --------------- | -------------------- | ---------------- | ------- |
+| 1   | Authorize út lezárása + CSP   | KOA-01, KOA-02                          | Közepes         | –                    | PR               | kész (#15) |
+| 2   | CI-hardening                  | KOA-05, KOA-03, KOA-04, KOA-12          | Közepes         | –                    | PR               | kész (#15) |
+| 3   | Bemenetkezelés                | KOA-06, KOA-07, KOA-08, KOA-09, KOA-14, KOA-15 | Alacsony | 1 (fixture mappa)    | PR               | kész (#17) |
+| 4   | Repó-beállítások              | KOA-11                                  | Alacsony        | 2 (SHA-pinning után) | kézi, GitHub UI  | nyitott (admin) |
+| 5   | Dokumentáció                  | KOA-13, KOA-10, KOA-16, KOA-17          | Alacsony/info   | 1, 3                 | PR               | kész (#17) |
+| 6   | Élő ellenőrzés Forge dev site-on | KOA-01, KOA-02 (+ KOA-07 nyitott kérdés) | –          | 1                    | kézi             | nyitott |
 
 Az 1. és 2. lépés párhuzamosan mehet. Minden PR előtt: `npm run lint`, `format:check`,
 `typecheck`, `test`, `build`, `test:e2e`.

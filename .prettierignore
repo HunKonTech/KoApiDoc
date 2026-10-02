@@ -8,3 +8,5 @@ LICENSE
 docs
 README.md
 CONTRIBUTING.md
+# Generated, 210 levels deep: kept on one line (see static/macro-ui/dev/bridge-mock.ts).
+tests/fixtures/malicious/deep-external-ref.json

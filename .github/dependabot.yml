@@ -1,0 +1,17 @@
+# Updates of the GitHub Actions only: the workflows pin every action to a commit SHA,
+# and Dependabot keeps those SHAs (and their version comments) current.
+# npm packages are updated by hand before each release (docs/RELEASING.md).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    # A new release is proposed only after a week, when a compromised one is usually known.
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ['*']

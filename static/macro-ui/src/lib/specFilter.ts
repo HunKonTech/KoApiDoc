@@ -1,3 +1,5 @@
+import { setOwn } from './json';
+
 type Json = Record<string, unknown>;
 
 const METHODS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'];
@@ -128,11 +130,11 @@ export function filterByTags(spec: Json, tags: string[]): TagFilterResult {
           if (!operationTags(value).some((t) => wanted.has(t))) continue;
           kept++;
         }
-        copy[field] = value;
+        setOwn(copy, field, value);
       }
       if (kept === 0) continue;
       operations += kept;
-      out[key] = kept === all ? raw : copy;
+      setOwn(out, key, kept === all ? raw : copy);
     }
     return out;
   };
