@@ -16,7 +16,11 @@ resources:
   - key: macro-ui
     path: static/macro-ui/dist
 permissions:
-  scopes: []
+  # Read-only access to the attachments of the current page (step 2). Final list
+  # before the first install, see docs/STEP-2.md; verify the names with `forge lint`.
+  scopes:
+    - read:attachment:confluence # v2: list attachments of a page, attachment metadata
+    - readonly:content.attachment:confluence # v1: download attachment content
   # No `external` section on purpose: no egress keeps "Runs on Atlassian" possible.
 app:
   runtime:

@@ -122,3 +122,21 @@ Ezeket csak akkor kell elvégezni, amikor te úgy döntesz, hogy mehet az első 
 - A `requestConfluence` csatolmány-letöltése Forge-ban ismerten kényes (átirányítás, bináris kezelés). Emiatt a 8. feladat az első valós pushig csak részben bizonyítható; a mock-first kialakítás ezt a kockázatot a `SpecSource` mögé szorítja.
 - A scope-lista véglegesítése az első telepítés előtt kötelező; utólagos bővítés ügyfél-újrajóváhagyást igényel.
 - A felhasználó jogosultságával olvasunk (`requestConfluence`), ezért egy oldal nézője csak azt a csatolmányt látja, amihez jogosult; ez szándékos, de hibaüzenetben kezelni kell.
+
+## Állapot (2026-10-02): elkészült, helyben ellenőrizve
+
+| Elfogadási feltétel | Eredmény |
+|---|---|
+| `lint`, `typecheck`, `test`, `build`, `prettier --check` | hibamentes; 92 teszt (config, specSource, limits, externalRefs, parseSpec, ConfigMacro, ViewMacro) |
+| `dev:local` csatolmány-mód | a lista megjelenik (a PNG rejtve), a JSON, YAML és 3.1-es csatolmány megjelenik Swagger UI-ban; config mentés → nézet |
+| Hibaüzemmódok | `forbidden`, `missing`, `toolarge`, `notext`, `slow` (15 s időkorlát) és törölt csatolmány: érthető angol üzenet, 0 oldalhiba |
+| Régi `{ spec }` config | megjelenik („Petstore JSON (step 1 config)” minta) |
+| Külső `$ref` | figyelmeztetés, a többi rész megjelenik, headless Chromiumban 0 külső kérés |
+| Production build | nincs benne mock-kód |
+
+Megvalósítási megjegyzések:
+- A helyi mock a `requestConfluence` REST-végpontjait emulálja (`dev/bridge-mock.ts`), így a `ConfluenceSpecSource` is fut helyben; a `MockSpecSource` a teszteké.
+- A betöltés előbb a metaadatot kéri le (`GET /wiki/api/v2/attachments/{id}`), és csak megfelelő méretű, kiterjesztésű, ugyanazon oldalhoz tartozó csatolmányt tölt le; a letöltött tartalom szigorú UTF-8 dekódoláson megy át.
+- Külső hivatkozásnak minden nem `#`-kal kezdődő `$ref` számít (relatív fájl is), mert azt is a Swagger UI töltené le.
+- Scope-ok a manifestben: `read:attachment:confluence`, `readonly:content.attachment:confluence` (az első push előtt ellenőrizendő).
+- Nyitott kérdés az első pushra: a `view.submit` pontos payload-alakja a Custom UI makró-confighoz (az 1. lépés óta a config objektumot adjuk át közvetlenül).

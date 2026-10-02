@@ -36,11 +36,30 @@
       <label
         >Spec
         <select id="spec">
-          <option value="petstore-json">Petstore JSON</option>
+          <option value="petstore-json">Petstore JSON (step 1 config)</option>
           <option value="petstore-yaml">Petstore YAML</option>
+          <option value="external-ref">External $ref</option>
           <option value="saved">Saved from config</option>
           <option value="bad">Invalid</option>
           <option value="empty">Empty</option>
+          <optgroup label="Page attachment">
+            <option value="att-att1001">petstore.json</option>
+            <option value="att-att1002">petstore.yaml</option>
+            <option value="att-att1003">multi-tag-3.1.json</option>
+            <option value="att-att1004">with-external-ref.json</option>
+            <option value="att-deleted">deleted.yaml (missing)</option>
+          </optgroup>
+        </select>
+      </label>
+      <label
+        >Failure
+        <select id="fail">
+          <option value="">none</option>
+          <option value="forbidden">forbidden</option>
+          <option value="missing">missing</option>
+          <option value="toolarge">toolarge</option>
+          <option value="notext">notext</option>
+          <option value="slow">slow (20 s)</option>
         </select>
       </label>
       <label><input type="checkbox" id="dark" /> Dark</label>
@@ -50,10 +69,11 @@
       const $ = (id) => document.getElementById(id);
       const load = () => {
         const q = new URLSearchParams({ mode: $('mode').value, spec: $('spec').value });
+        if ($('fail').value) q.set('fail', $('fail').value);
         if ($('dark').checked) q.set('dark', '1');
         $('frame').src = '/index.html?' + q;
       };
-      for (const id of ['mode', 'spec', 'dark']) $(id).addEventListener('change', load);
+      for (const id of ['mode', 'spec', 'fail', 'dark']) $(id).addEventListener('change', load);
       // After saving in config mode, show the saved spec in view mode.
       window.addEventListener('message', (e) => {
         if (e.data?.type === 'koapidoc-submit' || e.data?.type === 'koapidoc-close') {
