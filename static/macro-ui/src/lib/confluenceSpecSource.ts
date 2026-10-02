@@ -39,9 +39,7 @@ export class ConfluenceSpecSource implements SpecSource {
         const info = toAttachmentInfo(item);
         if (info) result.push(info);
       }
-      const next = (body as { _links?: { next?: unknown } })._links?.next;
-      // Only follow links that stay on the same API.
-      path = typeof next === 'string' && next.startsWith('/wiki/api/v2/') ? next : null;
+      path = nextPath((body as { _links?: { next?: unknown } })._links?.next);
     }
     return result;
   }
@@ -120,6 +118,27 @@ export class ConfluenceSpecSource implements SpecSource {
     });
     return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
   }
+}
+
+/** Stands in for the Confluence site, so relative links can be resolved and compared. */
+const SITE = 'https://confluence.invalid';
+
+/**
+ * The path of a pagination link, if it stays on the same API: resolved first, so
+ * `..` (also as `%2e%2e`) and `//other.host` cannot lead elsewhere. Encoded
+ * slashes are refused, as a server might decode them into path separators.
+ */
+function nextPath(next: unknown): string | null {
+  if (typeof next !== 'string') return null;
+  let url: URL;
+  try {
+    url = new URL(next, SITE);
+  } catch {
+    return null;
+  }
+  if (url.origin !== SITE || !url.pathname.startsWith('/wiki/api/v2/')) return null;
+  if (/%2f|%5c/i.test(url.pathname)) return null;
+  return url.pathname + url.search;
 }
 
 function checkId(id: string, pattern: RegExp) {

@@ -145,12 +145,36 @@ describe('ConfluenceSpecSource.listAttachments', () => {
     ]);
   });
 
-  it('does not follow links to other hosts', async () => {
-    const { request, source } = confluence(() =>
-      json({ results: [], _links: { next: 'https://evil.example.com/x' } }),
-    );
+  it.each([
+    'https://evil.example.com/x',
+    'https://evil.example.com/wiki/api/v2/x',
+    '//evil.example.com/wiki/api/v2/x',
+    '/wiki/api/v2/../../rest/x',
+    '/wiki/api/v2/%2e%2e/%2E%2E/rest/x',
+    '/wiki/api/v2/..%2f..%2frest/x',
+    '/wiki/api/v2/..%5C..%5Crest/x',
+    '/wiki/rest/api/x',
+    42,
+  ])('does not follow the link %j', async (next) => {
+    const { request, source } = confluence(() => json({ results: [], _links: { next } }));
     await source.listAttachments('123');
     expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  it('follows the normalised path of a link that stays on the API', async () => {
+    const { request, source } = confluence((path) =>
+      json({
+        results: [],
+        _links: path.includes('cursor')
+          ? {}
+          : { next: '/wiki/api/v2/x/../pages/123/attachments?cursor=a#b' },
+      }),
+    );
+    await source.listAttachments('123');
+    expect(request.mock.calls.map((c) => c[0])).toEqual([
+      '/wiki/api/v2/pages/123/attachments?limit=250',
+      '/wiki/api/v2/pages/123/attachments?cursor=a',
+    ]);
   });
 
   it.each([
