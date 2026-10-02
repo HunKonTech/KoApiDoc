@@ -1,3 +1,5 @@
+import { setOwn } from './json';
+
 const MAX_DEPTH = 200;
 
 export type ExternalRefResult = {
@@ -26,7 +28,7 @@ export function stripExternalRefs(spec: Record<string, unknown>): ExternalRefRes
       return { description: `External reference not supported: ${ref}` };
     }
     const out: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(obj)) out[key] = walk(value, depth + 1);
+    for (const [key, value] of Object.entries(obj)) setOwn(out, key, walk(value, depth + 1));
     return out;
   };
 

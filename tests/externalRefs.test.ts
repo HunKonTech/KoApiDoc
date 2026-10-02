@@ -41,4 +41,24 @@ describe('stripExternalRefs', () => {
     const r = stripExternalRefs({ openapi: '3.0.0', a: ref, b: [ref, ref] });
     expect(r.refs).toEqual(['https://example.com/a.json']);
   });
+
+  it('copies "__proto__" keys as own keys, without changing prototypes', () => {
+    const spec = JSON.parse(
+      '{"openapi":"3.0.3","paths":{"__proto__":{"__proto__":{"polluted":true},' +
+        '"get":{"responses":{"200":{"$ref":"https://example.com/r.json"}}}}}}',
+    ) as Record<string, unknown>;
+    const r = stripExternalRefs(spec);
+    expect(r.refs).toEqual(['https://example.com/r.json']);
+    const paths = r.spec.paths as Record<string, unknown>;
+    expect(Object.getPrototypeOf(paths)).toBe(Object.prototype);
+    expect(Object.keys(paths)).toEqual(['__proto__']);
+    const item = Object.getOwnPropertyDescriptor(paths, '__proto__')?.value as Record<
+      string,
+      unknown
+    >;
+    expect(Object.getPrototypeOf(item)).toBe(Object.prototype);
+    expect(Object.keys(item)).toEqual(['__proto__', 'get']);
+    expect(JSON.stringify(item)).toContain('External reference not supported');
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
 });

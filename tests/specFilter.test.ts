@@ -179,4 +179,20 @@ describe('filterByTags', () => {
     expect(operations).toBe(152);
     expect(performance.now() - start).toBeLessThan(500);
   });
+
+  it('copies "__proto__" keys as own keys, without changing prototypes', () => {
+    // JSON.parse makes "__proto__" an ordinary own key; a copy by assignment would not.
+    const spec = JSON.parse(
+      '{"openapi":"3.0.3","info":{"title":"x","version":"1"},"paths":{"__proto__":' +
+        '{"__proto__":{"polluted":true},"get":{"tags":["a"],"responses":{}},"post":{"tags":["b"],"responses":{}}}}}',
+    ) as Json;
+    const paths = filterByTags(spec, ['a']).spec.paths as Json;
+    expect(Object.getPrototypeOf(paths)).toBe(Object.prototype);
+    expect(Object.keys(paths)).toEqual(['__proto__']);
+    const item = Object.getOwnPropertyDescriptor(paths, '__proto__')?.value as Json;
+    expect(Object.getPrototypeOf(item)).toBe(Object.prototype);
+    expect(Object.keys(item)).toEqual(['__proto__', 'get']);
+    expect(item.polluted).toBeUndefined();
+    expect(({} as Json).polluted).toBeUndefined();
+  });
 });
