@@ -9,16 +9,21 @@
         font-family: sans-serif;
       }
       header {
+        position: sticky;
+        top: 0;
+        z-index: 1;
         display: flex;
-        gap: 12px;
+        flex-wrap: wrap;
+        gap: 8px 12px;
         align-items: center;
         padding: 8px 12px;
         background: #f1f2f4;
         border-bottom: 1px solid #ccc;
       }
       iframe {
+        display: block;
         width: 100%;
-        height: calc(100vh - 49px);
+        height: 600px;
         border: 0;
       }
     </style>
@@ -39,6 +44,8 @@
           <option value="petstore-json">Petstore JSON (step 1 config)</option>
           <option value="petstore-yaml">Petstore YAML</option>
           <option value="external-ref">External $ref</option>
+          <option value="multi-tag">Bookshop 3.1 (several tags)</option>
+          <option value="broken-structure">Broken structure (error boundary)</option>
           <option value="saved">Saved from config</option>
           <option value="bad">Invalid</option>
           <option value="empty">Empty</option>
@@ -47,6 +54,9 @@
             <option value="att-att1002">petstore.yaml</option>
             <option value="att-att1003">multi-tag-3.1.json</option>
             <option value="att-att1004">with-external-ref.json</option>
+            <option value="att-att2001">large-1500.json (1500 operations)</option>
+            <option value="att-att2002">large-2mb.json (just below 2 MB)</option>
+            <option value="att-att2003">too-large.json (above 2 MB)</option>
             <option value="att-deleted">deleted.yaml (missing)</option>
           </optgroup>
         </select>
@@ -63,25 +73,86 @@
         </select>
       </label>
       <label><input type="checkbox" id="dark" /> Dark</label>
+      <label
+        ><input type="checkbox" id="autosize" checked /> Size frame to content (as Forge)</label
+      >
+    </header>
+    <header>
+      <strong>Display options</strong>
+      <label
+        >Expand
+        <select id="expansion">
+          <option value="">(saved)</option>
+          <option value="collapsed">collapsed</option>
+          <option value="tags">tags open</option>
+          <option value="all">all open</option>
+        </select>
+      </label>
+      <label
+        >Schemas
+        <select id="schemas">
+          <option value="">(saved)</option>
+          <option value="1">show</option>
+          <option value="0">hide</option>
+        </select>
+      </label>
+      <label
+        >Search box
+        <select id="filter">
+          <option value="">(saved)</option>
+          <option value="1">on</option>
+          <option value="0">off</option>
+        </select>
+      </label>
+      <label>Tags <input id="tags" placeholder="e.g. books,orders" size="16" /></label>
+      <label>Height <input id="height" placeholder="auto or px" size="8" /></label>
     </header>
     <iframe id="frame" title="macro"></iframe>
     <script>
       const $ = (id) => document.getElementById(id);
+      const OPTIONS = ['expansion', 'schemas', 'filter', 'tags', 'height'];
+      let lastHeight = 600;
+      const fitFrame = (height = lastHeight) => {
+        lastHeight = height;
+        const header = [...document.querySelectorAll('header')].reduce(
+          (h, e) => h + e.offsetHeight,
+          0,
+        );
+        $('frame').style.height = $('autosize').checked
+          ? `${Math.max(height, 100)}px`
+          : `calc(100vh - ${header}px)`;
+      };
       const load = () => {
         const q = new URLSearchParams({ mode: $('mode').value, spec: $('spec').value });
         if ($('fail').value) q.set('fail', $('fail').value);
         if ($('dark').checked) q.set('dark', '1');
+        for (const id of OPTIONS) {
+          const value = $(id).value.trim();
+          if (value) q.set(id, id === 'height' && value === 'auto' ? '0' : value);
+        }
         $('frame').src = '/index.html?' + q;
       };
-      for (const id of ['mode', 'spec', 'fail', 'dark']) $(id).addEventListener('change', load);
+      for (const id of ['mode', 'spec', 'fail', 'dark', ...OPTIONS]) {
+        $(id).addEventListener('change', load);
+      }
+      $('autosize').addEventListener('change', () => fitFrame());
       // After saving in config mode, show the saved spec in view mode.
       window.addEventListener('message', (e) => {
+        if (e.data?.type === 'koapidoc-resize') {
+          if ($('autosize').checked) fitFrame(e.data.height);
+          return;
+        }
         if (e.data?.type === 'koapidoc-submit' || e.data?.type === 'koapidoc-close') {
           $('mode').value = 'view';
-          if (e.data.type === 'koapidoc-submit') $('spec').value = 'saved';
+          if (e.data.type === 'koapidoc-submit') {
+            $('spec').value = 'saved';
+            // Show the options that were just saved, not the overrides.
+            for (const id of OPTIONS) $(id).value = '';
+          }
           load();
         }
       });
+      fitFrame();
       load();
     </script>
   </body>

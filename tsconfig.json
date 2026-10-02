@@ -10,6 +10,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "types": ["node"],
+    "allowImportingTsExtensions": true,
     // Tests import the macro UI: use one copy of the React types (the root one).
     "paths": {
       "react": ["./node_modules/@types/react"],

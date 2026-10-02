@@ -2,7 +2,10 @@ import { view } from '@forge/bridge';
 
 export type ColorMode = 'light' | 'dark';
 
-/** Enables Atlassian design tokens and mirrors the host color mode on <html data-ko-theme>. */
+/**
+ * Enables Atlassian design tokens and mirrors the host color mode on <html data-ko-theme>
+ * and on Swagger UI's own dark mode class (`html.dark-mode`).
+ */
 export async function applyTheme(): Promise<ColorMode> {
   let mode: ColorMode;
   try {
@@ -14,5 +17,6 @@ export async function applyTheme(): Promise<ColorMode> {
     mode = window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
   document.documentElement.dataset.koTheme = mode;
+  document.documentElement.classList.toggle('dark-mode', mode === 'dark');
   return mode;
 }

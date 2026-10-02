@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "dev:local": "vite --mode mock --open /local.html"
+    "dev:local": "vite --mode mock --open /local.html",
+    "dev:mock": "vite --mode mock",
+    "e2e:serve": "vite build --mode mock --outDir dist-mock && vite preview --mode mock --outDir dist-mock"
   },
   "dependencies": {
     "@forge/bridge": "^7.1.0",

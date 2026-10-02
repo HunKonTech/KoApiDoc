@@ -39,3 +39,10 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+/**
+ * Above this many operations the configuration suggests showing only some tags.
+ * Swagger UI virtualizes long lists, so rendering stays fast (see docs/STEP-3.md);
+ * the suggestion is about readability and slower machines.
+ */
+export const LARGE_SPEC_OPERATIONS = 1000;

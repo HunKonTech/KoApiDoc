@@ -1,6 +1,6 @@
 # KoApiDoc: állapot és útiterv a teljes programhoz
 
-Frissítve: 2026-10-02, `main` @ `6b12543`. Alapelv: **az Atlassian felé semmi nem kerül** (nincs `forge register`, `deploy`, `install`, `tunnel`) addig, amíg te nem döntesz az első pushról egy közel kész állapotnál.
+Frissítve: 2026-10-02, a 3. lépés után. Alapelv: **az Atlassian felé semmi nem kerül** (nincs `forge register`, `deploy`, `install`, `tunnel`) addig, amíg te nem döntesz az első pushról egy közel kész állapotnál.
 
 ## Hol tartunk
 
@@ -10,7 +10,7 @@ Frissítve: 2026-10-02, `main` @ `6b12543`. Alapelv: **az Atlassian felé semmi 
 | Licenc és repó-szabályok | saját source-available licenc, `CONTRIBUTING.md`, külső PR-eket záró workflow | kész |
 | 1. lépés | Forge macro váz, beillesztett spec (JSON/YAML), Swagger UI, hiba- és üres állapot, téma, helyi mock | kész, ellenőrizve |
 | 2. lépés | spec betöltése az oldal csatolmányából, `SpecSource` absztrakció, külső `$ref` kezelés, 92 teszt | kész, ellenőrizve (lent) |
-| 3. lépés | megjelenítési beállítások, robusztusság, a11y, e2e tesztek | **megtervezve** (`STEP-3.md`) |
+| 3. lépés | megjelenítési beállítások, robusztusság, a11y, e2e tesztek | kész, helyben ellenőrizve (`STEP-3.md`, „Állapot” szakasz) |
 | 4. lépés | Marketplace-előkészítés (dokumentumok, listing, licencvizsgálat) | tervezés alatt (lent) |
 | 5. lépés | az első Atlassian-ellenőrzés fejlesztői site-on | még nem indult, a te döntésedre vár |
 | 6. lépés | Marketplace beküldés és kiadás | még nem indult |
@@ -31,22 +31,31 @@ Frissítve: 2026-10-02, `main` @ `6b12543`. Alapelv: **az Atlassian felé semmi 
 Nem ellenőrizhető Atlassian nélkül (szándékosan nem futtattam): `forge lint`, a valós Forge CSP, a valós makró-kontextus, a `requestConfluence` valós viselkedése (letöltés, átirányítás, bináris kezelés, jogosultság), az iframe magassága, a PDF-export.
 
 Észrevételek, nem blokkolók:
-- Nincs automata e2e teszt; a böngészős ellenőrzést kézzel futtatom. A 3. lépés ezt pótolja.
-- A nagy spec teljesítménye csak az 1. lépésben volt mérve (135 KB kb. 1,6 s); a 3. lépés 8. feladata ezt rögzíti.
+- Nincs automata e2e teszt; a böngészős ellenőrzést kézzel futtatom. A 3. lépés ezt pótolja. *(Pótolva: 39 Playwright-teszt, CI-ban is.)*
+- A nagy spec teljesítménye csak az 1. lépésben volt mérve (135 KB kb. 1,6 s); a 3. lépés 8. feladata ezt rögzíti. *(Rögzítve: 2000 művelet / 1,9 MB kb. 1,3 s, lásd `STEP-3.md`.)*
 - Az `app.id` placeholder, és a Forge-oldali ellenőrzések a 5. lépésben jönnek.
+
+## A 3. lépés eredménye röviden
+
+- Beállítások a makró-konfigurációban (`options`): kibontás, Schemas, keresőmező, tag-szűrés, magasság; élő előnézet; a régi configok változatlanul működnek.
+- Hibahatár a Swagger UI körül, saját címkézett keresőmező (útvonal/metódus/összefoglaló/operation ID/tag), Swagger UI saját sötét módja, kontrasztjavítások.
+- 174 unit/komponens teszt, 39 e2e teszt (axe: 0 kritikus/súlyos), CI `e2e` job és `format:check`.
+- Nagy spec: virtualizált lista, 2 MB-ig kb. 1,3 s; 1000 művelet felett a konfiguráció tag-szűrést javasol.
+- Licencvizsgálat kész, `THIRD_PARTY_NOTICES` frissítve.
 
 ## Hátralévő lépések a Marketplace-kiadásig
 
-**3. lépés (megtervezve):** beállítások (kibontás, séma, szűrő, tag-szűrés, magasság), hibahatár, a11y, nagy spec mérés, e2e tesztek CI-ban.
+**3. lépés (kész):** beállítások (kibontás, séma, szűrő, tag-szűrés, magasság), hibahatár, a11y, nagy spec mérés, e2e tesztek CI-ban.
 
 **4. lépés (Marketplace-előkészítés, helyi, dokumentum- és tartalommunka):**
 - Adatvédelmi nyilatkozat (privacy policy) és a végfelhasználói megállapodás (a saját licenc EULA-vá igazítva), támogatási elérhetőség, GDPR-nyilatkozat. Az app nem küld adatot külső félnek, ez a nyilatkozatban egyszerűen rögzíthető.
 - Listing szövegek (angol), ikon, képernyőképek (a mockról elkészíthetők), rövid útmutató/GIF.
-- Licencvizsgálat (`license-checker`), `THIRD_PARTY_NOTICES` véglegesítése.
+- Licencvizsgálat (`npm run licenses`), `THIRD_PARTY_NOTICES` véglegesítése (a 3. lépésben már átnézve).
+- Statikus tartalék PDF-exporthoz/nyomtatáshoz, ha a Forge a makrónál támogatja.
 - Biztonsági átnézés (a repó `security-review`-ja), függőségek frissítése és audit.
 - A scope-lista és a manifest végleges átnézése (utólagos bővítés ügyfél-újrajóváhagyást igényel).
 
-**5. lépés (az első Atlassian-ellenőrzés, a te jóváhagyásodra):** `forge register`, `forge lint`, `forge deploy -e development`, `forge install` a fejlesztői site-ra, majd a `STEP-2.md` ellenőrzőlistája: csatolmány-lista és letöltés valós Confluence-en, valós CSP, makró-konfiguráció mérete, szerkesztő/megtekintő mód, iframe magasság, PDF-export. Itt derül ki, ami a mockon nem látszik; várhatóan lesz javítási kör.
+**5. lépés (az első Atlassian-ellenőrzés, a te jóváhagyásodra):** `forge register`, `forge lint`, `forge deploy -e development`, `forge install` a fejlesztői site-ra, majd a `STEP-2.md` ellenőrzőlistája: csatolmány-lista és letöltés valós Confluence-en, valós CSP, makró-konfiguráció mérete, szerkesztő/megtekintő mód, iframe magasság (automatikus és fix), Swagger UI sötét mód a Confluence sötét témájával, PDF-export. Itt derül ki, ami a mockon nem látszik; várhatóan lesz javítási kör.
 
 **6. lépés (beküldés és kiadás):** Marketplace partnerprofil (ingyenes), developer space publikálása, listing beküldése, az Atlassian ellenőrzése (általában kb. egy hét), kiadás. Utána: karbantartás, hibabejelentések issue-ban.
 

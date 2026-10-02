@@ -12,6 +12,27 @@ Runtime (bundled into the Custom UI)
 - @forge/bridge                  - Atlassian Forge terms - https://developer.atlassian.com/platform/forge/
 - @forge/resolver                - Atlassian Forge terms - https://developer.atlassian.com/platform/forge/
 
+Transitive packages in the bundle (license scan of 2026-10-02, step 3)
+---------------------------------------------------------------------
+The packages below were read from the source maps of the production build
+(106 packages) and checked with `npm run licenses` (license-checker).
+
+- MIT (78): among others immutable, redux, react-redux, reselect, ramda, lodash,
+  remarkable, autolinker, react-syntax-highlighter, lowlight, @tanstack/react-virtual,
+  core-js-pure, @babel/runtime, buffer, url-parse, iframe-resizer, prop-types, scheduler.
+- Apache-2.0 (18): swagger-client, @swagger-api/apidom-* (core, ast, error, reference and the
+  OpenAPI 3.0 / 3.1 and JSON Schema namespaces), @swaggerexpert/cookie,
+  @swaggerexpert/json-pointer, openapi-path-templating, openapi-server-url-templating,
+  short-unique-id.
+- BSD-3-Clause: highlight.js, ieee754, ramda-adjunct.
+- BSD-2-Clause: apg-lite.
+- MPL-2.0 OR Apache-2.0: dompurify (used under Apache-2.0).
+- 0BSD: tslib.
+- Unlicense: zenscroll.
+- Atlassian terms: @forge/bridge, @forge/egress, @forge/i18n (dependencies of @forge/bridge).
+
+No GPL, LGPL or AGPL licensed package is part of the bundle.
+
 Development only (not shipped)
 ------------------------------
 - vite, @vitejs/plugin-react, vitest, eslint, typescript-eslint, prettier, typescript,
@@ -19,6 +40,8 @@ Development only (not shipped)
 - jsdom, @testing-library/react, @testing-library/dom, @testing-library/user-event (MIT),
   used by the component tests only; the root copies of react / react-dom / @types/react are
   test-only too (the shipped React comes from static/macro-ui).
+- @playwright/test (Apache-2.0) and @axe-core/playwright / axe-core (MPL-2.0), used by the
+  end-to-end and accessibility tests only.
 
-Transitive dependencies of the bundled packages carry their own licenses; run a
-license scan (e.g. `npx license-checker --production`) before each release and update this file.
+Transitive dependencies of the bundled packages carry their own licenses; run the license
+scan (`npm run licenses`) before each release and update this file.

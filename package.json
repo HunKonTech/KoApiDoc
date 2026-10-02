@@ -11,14 +11,20 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "forge:lint": "forge lint",
-    "dev:local": "npm run dev:local --prefix static/macro-ui"
+    "dev:local": "npm run dev:local --prefix static/macro-ui",
+    "test:e2e": "playwright test --config e2e/playwright.config.ts",
+    "fixtures:large": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tests/fixtures/write-large-spec.mts",
+    "format:check": "prettier --check .",
+    "licenses": "npx --yes license-checker@25 --production --summary --start static/macro-ui"
   },
   "dependencies": {
     "@forge/resolver": "^2.0.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.0",
     "@forge/cli": "^14.1.0",
+    "@playwright/test": "^1.63.0",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",

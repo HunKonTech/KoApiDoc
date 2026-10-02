@@ -1,7 +1,12 @@
 node_modules/
 dist/
+dist-mock/
 coverage/
 .forge/
 *.log
 .DS_Store
 .env
+tests/fixtures/large-*.json
+tests/fixtures/too-large.json
+test-results/
+playwright-report/
