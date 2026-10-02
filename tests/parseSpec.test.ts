@@ -30,6 +30,25 @@ describe('parseSpec', () => {
     expect(r.ok && r.version).toBe('openapi-3.1');
   });
 
+  it('rejects a YAML alias bomb quickly, keeps ordinary anchors', () => {
+    let yaml =
+      'openapi: 3.0.3\ninfo: {title: x, version: "1"}\nx-0: &a0 [lol, lol, lol, lol, lol]\n';
+    for (let i = 1; i <= 12; i++) {
+      yaml += `x-${i}: &a${i} [${Array(5)
+        .fill(`*a${i - 1}`)
+        .join(', ')}]\n`;
+    }
+    const started = performance.now();
+    const r = parseSpec(yaml);
+    expect(!r.ok && r.code).toBe('too-complex');
+    expect(performance.now() - started).toBeLessThan(2000);
+
+    const anchors = parseSpec(
+      'openapi: 3.0.3\ninfo: {title: x, version: "1"}\nx-ok: &ok {description: OK}\nx-use: [*ok, *ok]\n',
+    );
+    expect(anchors.ok).toBe(true);
+  });
+
   it('tolerates a BOM and surrounding whitespace', () => {
     expect(parseSpec('﻿  \n{"openapi":"3.0.0"}\n').ok).toBe(true);
   });

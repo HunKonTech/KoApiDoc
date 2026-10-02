@@ -1,6 +1,6 @@
 # KoApiDoc: állapot és útiterv a teljes programhoz
 
-Frissítve: 2026-10-02, `main` @ `805a349`. Alapelv: **az Atlassian felé semmi nem kerül** (nincs `forge register`, `deploy`, `install`, `tunnel`, nincs Marketplace-fiók vagy listing) addig, amíg te nem döntesz az első pushról egy közel kész állapotnál.
+Frissítve: 2026-10-02, a 4. lépés után (`main` @ `e6aa27c` + a 4. lépés változásai). Alapelv: **az Atlassian felé semmi nem kerül** (nincs `forge register`, `deploy`, `install`, `tunnel`, nincs Marketplace-fiók vagy listing) addig, amíg te nem döntesz az első pushról egy közel kész állapotnál.
 
 ## Hol tartunk
 
@@ -11,9 +11,23 @@ Frissítve: 2026-10-02, `main` @ `805a349`. Alapelv: **az Atlassian felé semmi 
 | 1. lépés | Forge macro váz, beillesztett spec (JSON/YAML), Swagger UI, hiba- és üres állapot, téma, helyi mock | kész, ellenőrizve |
 | 2. lépés | spec betöltése az oldal csatolmányából, `SpecSource` absztrakció, külső `$ref` kezelés | kész, ellenőrizve |
 | 3. lépés | megjelenítési beállítások, tag-szűrés, kereső, hibahatár, a11y, nagy spec mérés, e2e tesztek CI-ban, licencvizsgálat | kész, ellenőrizve (lent) |
-| 4. lépés | Marketplace-előkészítés (dokumentumok, listing-szövegek, képernyőképek, biztonsági átnézés, kiadási folyamat) | **megtervezve** (`STEP-4.md`) |
+| 4. lépés | Marketplace-előkészítés (dokumentumok, listing-szövegek, képernyőképek, biztonsági átnézés, kiadási folyamat) | kész, ellenőrizve (lent és `STEP-4.md`) |
 | 5. lépés | az első Atlassian-ellenőrzés fejlesztői site-on | nem indult, a te jóváhagyásodra vár |
 | 6. lépés | Marketplace beküldés és kiadás | nem indult |
+
+## A 4. lépés eredménye
+
+| Elem | Eredmény |
+|---|---|
+| Felhasználói dokumentumok | `docs/USER-GUIDE.md`, `docs/PRIVACY.md`, `SECURITY.md`, `CHANGELOG.md` (angolul) |
+| Beküldési anyag | `docs/MARKETPLACE-LISTING.md`: döntések (D1–D9), listing-szövegek mért hosszal, Privacy and Security válaszok, scope-indoklás, külső hosztok (nincs), Atlassian-oldali teendők listája |
+| Kiadási folyamat | `docs/RELEASING.md` (semver, ellenőrzőlista, deploy, visszaállítás, audit-kivételek) |
+| Grafika | `marketing/`: ikon, banner, 8 képernyőkép, egy paranccsal újragenerálható (`npm run marketing:capture`) |
+| Biztonsági átnézés | 2 hiba javítva: külső képek a spec leírásában (CSP meta tag), YAML alias-bomba (értékszám-korlát a `parseSpec`-ben); XSS-próba tiszta; részletek a `STEP-4.md`-ben |
+| `npm audit` | szállított kód: 0; fejlesztői eszközök: 31 találat a `@forge/cli` rögzített függőségeiben (indokolt kivétel) |
+| Licencvizsgálat | 106 bundle-csomag, GPL/LGPL/AGPL nincs |
+| Tesztek | 175 unit/komponens, 42/42 e2e (új: külső kép blokkolása, alias-bomba, hibahatár chunk-hibával) |
+| Támogatás | issue-sablonok (hiba, ötlet), biztonsági bejelentés privát úton; a Dependabot PR-jeit a lezáró workflow átengedi |
 
 ## A 3. lépés ellenőrzésének eredménye
 
@@ -35,26 +49,26 @@ Megjegyzés a futtatásról: ebben a környezetben a Playwright saját böngész
 Nem ellenőrizhető Atlassian nélkül (szándékosan nem futtattam): `forge lint`, a valós Forge CSP, a valós makró-kontextus, a `requestConfluence` valós viselkedése (letöltés, átirányítás, bináris kezelés, jogosultság), az iframe automatikus magassága, a PDF-export, a makró-konfiguráció tényleges mérethatára. A `readonly:content.attachment:confluence` érvényes Forge-scope; a `read:attachment:confluence` név és az endpointok scope-megfelelése az 5. lépésben ellenőrzendő (`forge lint`).
 
 Észrevételek, nem blokkolók:
-- A Dependabot (ha bekapcsolod) PR-jeit a külső PR-eket záró workflow lezárná; a 4. lépés ezt rögzíti (kézi frissítés, vagy a bot engedélyezése).
+- A Dependabot-kérdés a 4. lépésben rendezve (kézi frissítés; a workflow átengedi a botot).
 - Az `app.id` még placeholder (`forge register` az 5. lépésben).
 
 ## Hátralévő lépések a Marketplace-kiadásig
 
-**4. lépés (megtervezve):** felhasználói útmutató, privacy policy, listing-szövegek, képernyőképek és ikon, `SECURITY.md`, `CHANGELOG`, kiadási folyamat, `npm audit` és biztonsági átnézés, végleges licencvizsgálat. Részletek: `STEP-4.md`.
+**5. lépés (az első Atlassian-ellenőrzés, a te jóváhagyásodra):** `forge register`, `forge lint`, `forge deploy -e development`, `forge install` a fejlesztői site-ra, majd az ellenőrzőlista: csatolmány-lista és letöltés valós Confluence-en, valós CSP (a saját CSP meta taggel együtt), makró-konfiguráció mérete, szerkesztő és megtekintő mód, iframe magasság, PDF-export (és döntés az `adfExport` tartalékról). A teljes lista: `MARKETPLACE-LISTING.md` 5. szakasz. Itt derül ki, ami a mockon nem látszik; várhatóan lesz javítási kör.
 
-**5. lépés (az első Atlassian-ellenőrzés, a te jóváhagyásodra):** `forge register`, `forge lint`, `forge deploy -e development`, `forge install` a fejlesztői site-ra, majd az ellenőrzőlista: csatolmány-lista és letöltés valós Confluence-en, valós CSP, makró-konfiguráció mérete, szerkesztő és megtekintő mód, iframe magasság, PDF-export. Itt derül ki, ami a mockon nem látszik; várhatóan lesz javítási kör.
-
-**6. lépés (beküldés és kiadás):** Marketplace partnerprofil (ingyenes), developer space publikálása, listing beküldése, az Atlassian ellenőrzése (általában kb. egy hét), kiadás. Utána: karbantartás, hibabejelentések issue-ban.
+**6. lépés (beküldés és kiadás):** a repó publikussá tétele (a dokumentum-URL-ek miatt), Marketplace partnerprofil (ingyenes), developer space publikálása, `forge deploy -e production`, listing beküldése a `MARKETPLACE-LISTING.md` anyagával, az Atlassian ellenőrzése (kb. egy hét, legfeljebb 10–15 munkanap), kiadás. Utána: karbantartás a `RELEASING.md` szerint, hibabejelentések issue-ban.
 
 **Opcionális, kiadás után:** URL-ből töltés (egress, jelvény elvesztése), „Try it out”, Redoc-nézet, több spec egy oldalon, verzió-összehasonlítás, Data Center változat.
 
 ## Nyitott döntések tőled
 
-1. Listing-név és vendor neve (javaslat: „KoApiDoc for Confluence”; vendor: a saját neved, vagy a „HunKonTech”, ha szervezetként is használhatod).
-2. EULA: a saját licenc (jogász átnézése után) vagy az Atlassian szabványos EULA-ja (javaslat: a saját licenc).
-3. Publikus URL-ek a privacy policy-hoz és az útmutatóhoz (javaslat: GitHub Pages, ezt neked kell bekapcsolnod).
-4. Támogatási kapcsolat: GitHub Issues, és egy e-mail-cím a biztonsági bejelentéseknek; az Atlassian Developer Community-fiók regisztrálása.
-5. Dependabot: kézi frissítés vagy a bot engedélyezése a workflow-ban.
-6. „Try it out” az első kiadásba (javaslat: nem).
-7. Mikor menjen az első push (5. lépés): a 4. lépés után, vagy már előtte (javaslat: már most is lehet, mert a Marketplace-előkészítés valós képernyőképeket kér, de a mock-képek is elégségesek lehetnek; a döntés tiéd).
-8. A GitHub-beállítások (a `main` védelme, collaborator lista), ha még nem történt meg.
+A 4. lépés a javasolt alapértékeket rögzítette (`MARKETPLACE-LISTING.md` 1. szakasz); ezek maradnak, ha nem döntesz másképp:
+
+1. **Vendor neve (D2):** „HunKonTech”, ha szervezetként használhatod; különben a saját neved (akkor a banner és a `PRIVACY.md` szövege változik).
+2. **Publikus URL-ek (D4):** a repó most **privát**. Javaslat: publikussá tétel a beküldés előtt (az eredeti terv is ez volt), és GitHub-linkek; alternatíva a GitHub Pages (privát repónál fizetős).
+3. **Atlassian Developer Community-fiók (D6):** a te regisztrációd kell.
+4. **Jogász:** a `LICENSE` mint EULA és a `PRIVACY.md` átnézése a beküldés előtt.
+5. **Biztonsági kapcsolat:** most csak GitHub private vulnerability reporting (publikus repó kell hozzá); ha szeretnél külön e-mail-címet, megadod és bekerül.
+6. **`close-external-prs` runner:** `self-hosted` helyett `ubuntu-latest` a publikussá tétel előtt (javaslat).
+7. Mikor menjen az első push (5. lépés): a repó a beküldéshez szükséges anyaggal kész; a mock-képek elégségesek, valós képek az 5. lépés után opcionálisak.
+8. A GitHub-beállítások (a `main` védelme, collaborator lista, private vulnerability reporting), ha még nem történt meg.

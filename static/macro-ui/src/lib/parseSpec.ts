@@ -2,13 +2,21 @@ import { load as loadYaml } from 'js-yaml';
 
 export type SpecVersion = 'swagger-2.0' | 'openapi-3.0' | 'openapi-3.1';
 
-export type ParseErrorCode = 'empty' | 'syntax' | 'not-object' | 'not-openapi';
+export type ParseErrorCode = 'empty' | 'syntax' | 'too-complex' | 'not-object' | 'not-openapi';
 
 export type ParseResult =
   | { ok: true; spec: Record<string, unknown>; version: SpecVersion }
   | { ok: false; code: ParseErrorCode; message: string };
 
 const fail = (code: ParseErrorCode, message: string): ParseResult => ({ ok: false, code, message });
+
+/**
+ * Most values a YAML document may expand to. YAML aliases (`*name`) are shared, not
+ * copied, so a few hundred bytes can stand for billions of values ("billion laughs");
+ * walking such a tree would freeze the reader's browser. A 2 MB specification has far
+ * fewer values (the 2 MB test spec: about 40 000).
+ */
+export const MAX_YAML_NODES = 2_000_000;
 
 const errorText = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
@@ -32,6 +40,13 @@ export function parseSpec(input: string | null | undefined): ParseResult {
     return fail(
       'syntax',
       `Could not parse the specification as ${looksLikeJson ? 'JSON' : 'YAML'}: ${errorText(e)}`,
+    );
+  }
+
+  if (!looksLikeJson && exceedsNodes(doc, MAX_YAML_NODES)) {
+    return fail(
+      'too-complex',
+      `The YAML document expands to more than ${MAX_YAML_NODES.toLocaleString('en')} values through anchors and aliases (*name). Remove the nested aliases or use JSON.`,
     );
   }
 
@@ -62,4 +77,18 @@ function detectVersion(spec: Record<string, unknown>): SpecVersion | null {
     if (/^3\.1(\.\d+)?$/.test(openapi)) return 'openapi-3.1';
   }
   return null;
+}
+
+/** True when walking `doc` (shared nodes counted every time they occur) visits more than `max` values. */
+function exceedsNodes(doc: unknown, max: number): boolean {
+  const stack: unknown[] = [doc];
+  let count = 0;
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (++count > max) return true;
+    if (node !== null && typeof node === 'object') {
+      for (const value of Object.values(node)) stack.push(value);
+    }
+  }
+  return false;
 }

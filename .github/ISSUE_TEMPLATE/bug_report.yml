@@ -1,0 +1,87 @@
+name: Bug report
+description: Something does not work as described in the user guide.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Issues are **public**: do not paste confidential specifications or
+        personal data. Reduce the problem to a small, anonymised example.
+        Security problems: please use **Security → Report a vulnerability** instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what did you see instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Add the KoApiDoc macro to a page
+        2. Choose ...
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: message
+    attributes:
+      label: Message shown by the macro (if any)
+      placeholder: 'e.g. "Could not load api.yaml: The attachment was not found."'
+  - type: dropdown
+    id: source
+    attributes:
+      label: Source of the specification
+      options:
+        - Pasted text
+        - Page attachment
+    validations:
+      required: true
+  - type: dropdown
+    id: spec-version
+    attributes:
+      label: Specification version
+      options:
+        - Swagger 2.0
+        - OpenAPI 3.0.x
+        - OpenAPI 3.1.x
+        - Other / not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: format
+    attributes:
+      label: Format
+      options:
+        - JSON
+        - YAML
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Minimal specification that shows the problem
+      description: Shortened and anonymised. Leave empty if you cannot share one.
+      render: yaml
+  - type: input
+    id: app-version
+    attributes:
+      label: KoApiDoc version
+      description: Shown in Confluence under the installed apps (Manage apps).
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: e.g. Chrome 140, Firefox 143, Safari 26
+    validations:
+      required: true
+  - type: dropdown
+    id: theme
+    attributes:
+      label: Confluence theme
+      options:
+        - Light
+        - Dark
+        - Not sure

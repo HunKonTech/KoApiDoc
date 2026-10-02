@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144">
+  <title>KoApiDoc</title>
+  <!-- Own artwork: a document with JSON braces. No third-party marks or brand colors. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1F3A5F" />
+      <stop offset="1" stop-color="#14213D" />
+    </linearGradient>
+  </defs>
+  <rect width="144" height="144" rx="32" fill="url(#bg)" />
+  <path d="M40 26 H88 L106 44 V118 H40 Z" fill="#F8FAFC" />
+  <path d="M88 26 V44 H106 Z" fill="#CBD5E1" />
+  <g fill="none" stroke="#F59E0B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M64 50 C57 50 55 53 55 58 V63 C55 67 53 69 48 69 C53 69 55 71 55 75 V80 C55 85 57 88 64 88" />
+    <path d="M82 50 C89 50 91 53 91 58 V63 C91 67 93 69 98 69 C93 69 91 71 91 75 V80 C91 85 89 88 82 88" />
+  </g>
+  <rect x="52" y="98" width="42" height="6" rx="3" fill="#94A3B8" />
+  <rect x="52" y="108" width="26" height="6" rx="3" fill="#94A3B8" />
+</svg>

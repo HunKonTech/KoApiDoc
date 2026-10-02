@@ -2,9 +2,17 @@
 
 Confluence Cloud (Forge) macro that renders an OpenAPI / Swagger specification (JSON or YAML) with
 Swagger UI. The spec is either pasted into the macro or read from a `.json` / `.yaml` / `.yml`
-attachment of the page (always the latest version, max. 2 MB). Status: step 3 (display options,
-robustness, e2e tests), see [`docs/STATUS.md`](docs/STATUS.md), [`docs/STEP-3.md`](docs/STEP-3.md),
-[`docs/STEP-2.md`](docs/STEP-2.md), [`docs/STEP-1.md`](docs/STEP-1.md) and [`docs/PLAN.md`](docs/PLAN.md).
+attachment of the page (always the latest version, max. 2 MB). Status: step 4 (prepared for the
+Marketplace, not yet deployed), see [`docs/STATUS.md`](docs/STATUS.md) and the step documents
+[`STEP-4`](docs/STEP-4.md), [`STEP-3`](docs/STEP-3.md), [`STEP-2`](docs/STEP-2.md),
+[`STEP-1`](docs/STEP-1.md), [`PLAN`](docs/PLAN.md).
+
+| For | Document |
+| --- | -------- |
+| Users | [`docs/USER-GUIDE.md`](docs/USER-GUIDE.md), [`docs/PRIVACY.md`](docs/PRIVACY.md), [`CHANGELOG.md`](CHANGELOG.md) |
+| Security reports | [`SECURITY.md`](SECURITY.md) |
+| Marketplace submission | [`docs/MARKETPLACE-LISTING.md`](docs/MARKETPLACE-LISTING.md), [`marketing/`](marketing/README.md) |
+| Releases | [`docs/RELEASING.md`](docs/RELEASING.md) |
 
 ## Display options
 
@@ -22,10 +30,10 @@ have none and look as before):
 The configuration has a live preview (**Show preview**) and suggests choosing tags for specs with
 more than 1000 operations.
 
-Known limitations: Confluence's PDF / Word export and print do not run Custom UI apps, so the macro
-is missing from exports (a static fallback is planned for the Marketplace preparation). The iframe
-height is managed by the Forge host; the local mock imitates it, the real behaviour is checked in
-step 5.
+Known limitations (full list in the [user guide](docs/USER-GUIDE.md#limitations)): Confluence's
+PDF / Word export and print do not run Custom UI apps, so the macro is missing from exports (a
+static `adfExport` fallback is a candidate after step 5). The iframe height is managed by the Forge
+host; the local mock imitates it, the real behaviour is checked in step 5.
 
 ## Development
 
@@ -45,6 +53,9 @@ npx playwright install chromium   # once
 npm run test:e2e
 ```
 
+Marketplace images (logo, banner, screenshots of the mock) are regenerated with
+`npm run marketing:capture`, see [`marketing/README.md`](marketing/README.md).
+
 Other helpers: `npm run fixtures:large` writes the generated large test specs (1500 operations,
 just below and above 2 MB) to `tests/fixtures/` (git-ignored), `npm run licenses` prints the
 license summary of the shipped dependencies (see `THIRD_PARTY_NOTICES`).
@@ -58,8 +69,8 @@ npm run dev:local
 Opens `http://localhost:5173/local.html`: the macro UI with `@forge/bridge` replaced by a local mock
 (`static/macro-ui/dev/bridge-mock.ts`, only active in `--mode mock`, never in the production build).
 Switch between view and config mode, sample specs (Petstore JSON/YAML, external `$ref`, Bookshop
-3.1 with tags, a broken structure that triggers the error boundary, invalid, empty, saved from
-config), page attachments and light/dark theme. The second bar overrides the display options
+3.1 with tags, a circular YAML anchor that is rejected, remote images and script links
+that must be blocked, invalid, empty, saved from config), page attachments and light/dark theme. The second bar overrides the display options
 (expand, schemas, search box, tags, height); "(saved)" keeps the saved ones. **Size frame to
 content** imitates the Forge host, which sizes the macro frame to its content. Saving in config mode
 stores the config in the browser's localStorage.
