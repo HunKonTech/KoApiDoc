@@ -1,20 +1,27 @@
+import { parseOptions, type DisplayOptions } from './options';
 import type { SpecRef } from './specSource';
 
 /** What is stored in the macro configuration. */
-export type StoredConfig =
-  | { source: 'inline'; spec: string }
-  | { source: 'attachment'; attachmentId: string; title: string };
+export type StoredConfig = (
+  { source: 'inline'; spec: string } | { source: 'attachment'; attachmentId: string; title: string }
+) & { options?: DisplayOptions };
+
+/** Everything the macro needs from its configuration. */
+export type MacroConfig = { ref: SpecRef; options: DisplayOptions };
 
 const EMPTY: SpecRef = { kind: 'inline', spec: '' };
 
+const isObject = (raw: unknown): raw is Record<string, unknown> =>
+  raw !== null && typeof raw === 'object' && !Array.isArray(raw);
+
 /**
- * Reads the macro configuration. Accepts the new `{ source, ... }` shapes and the
- * step 1 shape `{ spec }`. Anything invalid becomes an empty inline spec, so the
- * macro shows its "no specification yet" hint instead of crashing.
+ * Reads the spec source of the macro configuration. Accepts the new `{ source, ... }`
+ * shapes and the step 1 shape `{ spec }`. Anything invalid becomes an empty inline
+ * spec, so the macro shows its "no specification yet" hint instead of crashing.
  */
 export function parseConfig(raw: unknown): SpecRef {
-  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return EMPTY;
-  const c = raw as Record<string, unknown>;
+  if (!isObject(raw)) return EMPTY;
+  const c = raw;
 
   if (c.source === 'attachment') {
     const id = c.attachmentId;
@@ -31,8 +38,15 @@ export function parseConfig(raw: unknown): SpecRef {
   return EMPTY;
 }
 
-export function toConfig(ref: SpecRef): StoredConfig {
-  return ref.kind === 'inline'
-    ? { source: 'inline', spec: ref.spec }
-    : { source: 'attachment', attachmentId: ref.attachmentId, title: ref.title };
+/** Reads the spec source and the display options; configs without options get the defaults. */
+export function parseMacroConfig(raw: unknown): MacroConfig {
+  return { ref: parseConfig(raw), options: parseOptions(isObject(raw) ? raw.options : undefined) };
+}
+
+export function toConfig(ref: SpecRef, options?: DisplayOptions): StoredConfig {
+  const base: StoredConfig =
+    ref.kind === 'inline'
+      ? { source: 'inline', spec: ref.spec }
+      : { source: 'attachment', attachmentId: ref.attachmentId, title: ref.title };
+  return options ? { ...base, options: { ...options, tags: [...options.tags] } } : base;
 }

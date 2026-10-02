@@ -5,6 +5,8 @@
   --ko-ok: #1f845a;
   --ko-warning: #e2b203;
   --ko-border: #dfe1e6;
+  --ko-link: #0c66e4;
+  --ko-focus: #388bff;
 }
 :root[data-ko-theme='dark'] {
   --ko-fg: #b6c2cf;
@@ -13,6 +15,8 @@
   --ko-ok: #4bce97;
   --ko-warning: #f5cd47;
   --ko-border: #38414a;
+  --ko-link: #579dff;
+  --ko-focus: #85b8ff;
 }
 body {
   margin: 0;
@@ -77,14 +81,6 @@ body {
   cursor: default;
 }
 
-/* Basic dark mode for Swagger UI: invert the light theme, keep media untouched. */
-:root[data-ko-theme='dark'] .ko-swagger {
-  filter: invert(88%) hue-rotate(180deg);
-}
-:root[data-ko-theme='dark'] .ko-swagger .microlight,
-:root[data-ko-theme='dark'] .ko-swagger img {
-  filter: invert(100%) hue-rotate(180deg);
-}
 .ko-warning {
   color: var(--ko-fg);
   border-color: var(--ko-warning);
@@ -108,4 +104,150 @@ body {
   background: var(--ko-bg);
   border: 1px solid var(--ko-border);
   border-radius: 4px;
+}
+.ko-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 4px 8px 8px;
+  border: 1px solid var(--ko-border);
+  border-radius: 4px;
+}
+.ko-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.ko-config input[type='number'] {
+  width: 7em;
+  padding: 4px 6px;
+  color: inherit;
+  background: var(--ko-bg);
+  border: 1px solid var(--ko-border);
+  border-radius: 4px;
+}
+.ko-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  max-height: 160px;
+  overflow: auto;
+}
+.ko-count {
+  opacity: 0.8;
+}
+.ko-config button.ko-link {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ko-link);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.ko-preview {
+  border-top: 1px solid var(--ko-border);
+  padding-top: 8px;
+}
+.ko-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.ko-message:focus {
+  outline: 2px solid var(--ko-focus);
+  outline-offset: 2px;
+}
+.ko-config :focus-visible,
+.ko-swagger.ko-fixed:focus-visible {
+  outline: 2px solid var(--ko-focus);
+  outline-offset: 2px;
+}
+
+/* Fixed height: the macro keeps its size and scrolls inside. */
+.ko-swagger.ko-fixed {
+  overflow: auto;
+  box-sizing: border-box;
+  border: 1px solid var(--ko-border);
+  border-radius: 4px;
+}
+
+/* Search box that replaces Swagger UI's tag-only filter (SwaggerView.tsx). */
+.ko-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 1460px;
+  margin: 12px auto 0;
+  padding: 0 20px;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+.swagger-ui .ko-search label {
+  color: var(--ko-fg);
+  font-size: 14px;
+  font-weight: 600;
+}
+.swagger-ui .ko-search input {
+  flex: 1;
+  min-width: 200px;
+  margin: 0;
+  padding: 6px 10px;
+  color: var(--ko-fg);
+  background: var(--ko-bg);
+  border: 1px solid #8590a2;
+  border-radius: 4px;
+  font: inherit;
+}
+
+/*
+ * Contrast fixes for Swagger UI's light theme (WCAG AA, found by the axe check in
+ * e2e/macro.spec.ts). Same hues, darker shades. The dark theme is Swagger UI's own
+ * (html.dark-mode, set in lib/theme.ts) and passes as it is.
+ */
+html:not(.dark-mode) .ko-swagger .swagger-ui {
+  .opblock-get .opblock-summary-method {
+    background: #0b6bcb;
+  }
+  .opblock-post .opblock-summary-method {
+    background: #1a7f4b;
+  }
+  .opblock-put .opblock-summary-method {
+    background: #a65c00;
+  }
+  .opblock-delete .opblock-summary-method {
+    background: #c4291c;
+  }
+  .opblock-patch .opblock-summary-method {
+    background: #0f7d6b;
+  }
+  .opblock-deprecated .opblock-summary-method {
+    background: #6b6e75;
+  }
+  .info .title small {
+    background: #5e6675;
+  }
+  .info .title small.version-stamp {
+    background: #4f7a00;
+  }
+  .info a,
+  .info .link {
+    color: #0c66e4;
+  }
+  .parameter__in {
+    color: #5e6c84;
+  }
+  .json-schema-2020-12-expand-deep-button {
+    color: #505f79;
+  }
+}
+.ko-suggestion {
+  padding: 6px 8px;
+  border-left: 3px solid var(--ko-warning);
 }

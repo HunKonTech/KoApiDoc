@@ -1,17 +1,25 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { ErrorBoundary } from './ErrorBoundary';
 import { stripExternalRefs } from './lib/externalRefs';
+import { DEFAULT_OPTIONS, type DisplayOptions } from './lib/options';
 import { parseSpec } from './lib/parseSpec';
+import { filterByTags } from './lib/specFilter';
 import { describeSourceError, type SpecRef, type SpecSource } from './lib/specSource';
 
 // Swagger UI is large: load it only when there is a valid spec to show.
 const SwaggerView = lazy(() => import('./SwaggerView'));
 
-type Props = { specRef: SpecRef; pageId: string | null; source: SpecSource };
+type Props = {
+  specRef: SpecRef;
+  pageId: string | null;
+  source: SpecSource;
+  options?: DisplayOptions;
+};
 
 type LoadState =
   { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; text: string };
 
-export function ViewMacro({ specRef, pageId, source }: Props) {
+export function ViewMacro({ specRef, pageId, source, options = DEFAULT_OPTIONS }: Props) {
   const attachmentId = specRef.kind === 'attachment' ? specRef.attachmentId : null;
   const [load, setLoad] = useState<LoadState>({ status: 'loading' });
 
@@ -33,7 +41,7 @@ export function ViewMacro({ specRef, pageId, source }: Props) {
     };
   }, [attachmentId, pageId, source]);
 
-  if (specRef.kind === 'inline') return <SpecView text={specRef.spec} />;
+  if (specRef.kind === 'inline') return <SpecDisplay text={specRef.spec} options={options} />;
 
   const name = specRef.title || 'the attachment';
   if (load.status === 'loading') {
@@ -47,14 +55,21 @@ export function ViewMacro({ specRef, pageId, source }: Props) {
       </div>
     );
   }
-  return <SpecView text={load.text} />;
+  return <SpecDisplay text={load.text} options={options} />;
 }
 
-function SpecView({ text }: { text: string }) {
-  const result = useMemo(() => {
-    const parsed = parseSpec(text);
-    return parsed.ok ? { ...parsed, ...stripExternalRefs(parsed.spec) } : parsed;
+/** Parses the spec text and shows it with the given display options (also used as preview). */
+export function SpecDisplay({ text, options }: { text: string; options: DisplayOptions }) {
+  const parsed = useMemo(() => {
+    const result = parseSpec(text);
+    return result.ok ? { ...result, ...stripExternalRefs(result.spec) } : result;
   }, [text]);
+  const result = useMemo(
+    () => (parsed.ok ? { ...parsed, ...filterByTags(parsed.spec, options.tags) } : parsed),
+    [parsed, options.tags],
+  );
+  // Swagger UI reads its settings once: remount it when they change.
+  const optionsKey = JSON.stringify(options);
 
   if (!result.ok) {
     if (result.code === 'empty') {
@@ -79,9 +94,26 @@ function SpecView({ text }: { text: string }) {
   return (
     <>
       {result.refs.length > 0 && <ExternalRefWarning refs={result.refs} />}
-      <Suspense fallback={<div className="ko-message">Loading API documentation…</div>}>
-        <SwaggerView spec={result.spec} />
-      </Suspense>
+      {result.unknownTags.length > 0 && (
+        <div className="ko-message ko-warning" role="status">
+          <strong>Some selected tags are not in the specification</strong>
+          <p>
+            Not found: {result.unknownTags.join(', ')}. Edit the macro to update the tag selection.
+          </p>
+        </div>
+      )}
+      {options.tags.length > 0 && result.operations === 0 ? (
+        <div className="ko-message" role="status">
+          <strong>No operations to show</strong>
+          <p>None of the {result.total} operations has one of the selected tags.</p>
+        </div>
+      ) : (
+        <ErrorBoundary resetKey={`${text}\n${optionsKey}`}>
+          <Suspense fallback={<div className="ko-message">Loading API documentation…</div>}>
+            <SwaggerView key={optionsKey} spec={result.spec} options={options} />
+          </Suspense>
+        </ErrorBoundary>
+      )}
     </>
   );
 }

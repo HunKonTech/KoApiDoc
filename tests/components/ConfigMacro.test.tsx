@@ -3,8 +3,30 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ConfigMacro } from '../../static/macro-ui/src/ConfigMacro';
+import { DEFAULT_OPTIONS, type DisplayOptions } from '../../static/macro-ui/src/lib/options';
+import { generateLargeSpec } from '../fixtures/largeSpec';
 import { MockSpecSource, type MockAttachment } from '../../static/macro-ui/src/lib/mockSpecSource';
 import type { SpecRef, SpecSource } from '../../static/macro-ui/src/lib/specSource';
+
+// Swagger UI is not under test here; the stub shows what the preview would render.
+vi.mock('../../static/macro-ui/src/SwaggerView', () => ({
+  default: ({ spec, options }: { spec: { paths?: object }; options: DisplayOptions }) => (
+    <div data-testid="swagger">
+      {Object.keys(spec.paths ?? {}).join(',')} {options.expansion}
+    </div>
+  ),
+}));
+
+const taggedSpec = JSON.stringify({
+  openapi: '3.0.3',
+  info: { title: 'Tagged', version: '1' },
+  tags: [{ name: 'pets' }, { name: 'store' }],
+  paths: {
+    '/pets': { get: { tags: ['pets'], responses: {} }, post: { tags: ['pets'], responses: {} } },
+    '/orders': { get: { tags: ['store'], responses: {} } },
+    '/health': { get: { responses: {} } },
+  },
+});
 
 const files: MockAttachment[] = [
   { id: 'att1', title: 'api.json', mediaType: 'application/json', fileSize: 2048, content: '{}' },
@@ -16,19 +38,31 @@ const files: MockAttachment[] = [
     content: '',
   },
   { id: 'att3', title: 'logo.png', mediaType: 'image/png', fileSize: 10, content: '' },
+  {
+    id: 'att4',
+    title: 'tagged.json',
+    mediaType: 'application/json',
+    fileSize: 10,
+    content: taggedSpec,
+  },
 ];
 
 afterEach(cleanup);
 
 function setup(
   initial: SpecRef,
-  { source = new MockSpecSource(files) as SpecSource, pageId = '1' as string | null } = {},
+  {
+    source = new MockSpecSource(files) as SpecSource,
+    pageId = '1' as string | null,
+    options = DEFAULT_OPTIONS as DisplayOptions,
+  } = {},
 ) {
-  const onSave = vi.fn(async () => {});
+  const onSave = vi.fn<(ref: SpecRef, options: DisplayOptions) => Promise<void>>(async () => {});
   const onCancel = vi.fn();
   render(
     <ConfigMacro
       initial={initial}
+      initialOptions={options}
       pageId={pageId}
       source={source}
       onSave={onSave}
@@ -44,7 +78,10 @@ describe('ConfigMacro', () => {
     await user.type(screen.getByLabelText(/OpenAPI \/ Swagger specification/), 'swagger: "2.0"');
     expect(screen.getByText('Valid swagger-2.0 document.')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Save' }));
-    expect(onSave).toHaveBeenCalledWith({ kind: 'inline', spec: 'swagger: "2.0"' });
+    expect(onSave).toHaveBeenCalledWith(
+      { kind: 'inline', spec: 'swagger: "2.0"' },
+      DEFAULT_OPTIONS,
+    );
   });
 
   it('lists only spec attachments with their size and saves the choice', async () => {
@@ -52,17 +89,21 @@ describe('ConfigMacro', () => {
     await user.click(screen.getByLabelText('Page attachment'));
     const select = await screen.findByLabelText('Attachment');
     const options = [...select.querySelectorAll('option')].map((o) => o.textContent);
-    expect(options).toEqual(['Choose a file…', 'api.json (2.0 KB)', 'api.yaml (10 B)']);
+    expect(options).toEqual([
+      'Choose a file…',
+      'api.json (2.0 KB)',
+      'api.yaml (10 B)',
+      'tagged.json (10 B)',
+    ]);
     expect(screen.getByText(/1 other attachment\(s\) are hidden/)).toBeTruthy();
     expect((screen.getByRole('button', { name: 'Save' }) as HTMLButtonElement).disabled).toBe(true);
 
     await user.selectOptions(select, 'att2');
     await user.click(screen.getByRole('button', { name: 'Save' }));
-    expect(onSave).toHaveBeenCalledWith({
-      kind: 'attachment',
-      attachmentId: 'att2',
-      title: 'api.yaml',
-    });
+    expect(onSave).toHaveBeenCalledWith(
+      { kind: 'attachment', attachmentId: 'att2', title: 'api.yaml' },
+      DEFAULT_OPTIONS,
+    );
   });
 
   it('preselects the saved attachment', async () => {
@@ -116,5 +157,100 @@ describe('ConfigMacro', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onCancel).toHaveBeenCalled();
+  });
+
+  it('saves the display options', async () => {
+    const { onSave, user } = setup({ kind: 'inline', spec: taggedSpec });
+    await user.selectOptions(screen.getByLabelText('Expand on load'), 'all');
+    await user.click(screen.getByLabelText('Show the Schemas section'));
+    await user.click(screen.getByLabelText('Show the search box'));
+    await user.click(screen.getByLabelText(/^store/));
+    await user.click(screen.getByLabelText('Fixed, with scrolling'));
+    const height = screen.getByLabelText('Height in pixels') as HTMLInputElement;
+    expect(height.value).toBe('600');
+    await user.clear(height);
+    await user.type(height, '800');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(onSave).toHaveBeenCalledWith(
+      { kind: 'inline', spec: taggedSpec },
+      { expansion: 'all', showSchemas: false, filter: false, tags: ['store'], height: 800 },
+    );
+  });
+
+  it('lists the tags of the spec with their operation counts', async () => {
+    const { user } = setup({ kind: 'inline', spec: '' });
+    expect(screen.getByText(/tags appear here once there is a valid specification/)).toBeTruthy();
+    await user.click(screen.getByLabelText(/OpenAPI \/ Swagger specification/));
+    await user.paste(taggedSpec);
+    const labels = [...document.querySelectorAll('.ko-tag-list label')].map((l) => l.textContent);
+    expect(labels).toEqual(['pets (2)', 'store (1)', 'default (1)']);
+    expect(screen.getByText('None selected: all operations are shown.')).toBeTruthy();
+  });
+
+  it('reads the tags of the chosen attachment', async () => {
+    setup({ kind: 'attachment', attachmentId: 'att4', title: 'tagged.json' });
+    expect(await screen.findByLabelText(/^pets/)).toBeTruthy();
+  });
+
+  it('keeps saved tags the spec no longer has, so they can be removed', async () => {
+    const { onSave, user } = setup(
+      { kind: 'inline', spec: taggedSpec },
+      { options: { ...DEFAULT_OPTIONS, tags: ['pets', 'gone'] } },
+    );
+    expect(screen.getByText('Only operations with the 2 selected tag(s) are shown.')).toBeTruthy();
+    await user.click(screen.getByLabelText(/^gone \(not in the specification\)/));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(onSave.mock.calls[0][1]).toMatchObject({ tags: ['pets'] });
+
+    await user.click(screen.getByRole('button', { name: 'Show all tags' }));
+    expect(screen.getByText('None selected: all operations are shown.')).toBeTruthy();
+  });
+
+  it('clamps the fixed height', async () => {
+    const { onSave, user } = setup(
+      { kind: 'inline', spec: '' },
+      { options: { ...DEFAULT_OPTIONS, height: 400 } },
+    );
+    const height = screen.getByLabelText('Height in pixels') as HTMLInputElement;
+    await user.clear(height);
+    await user.type(height, '50');
+    await user.tab();
+    expect(height.value).toBe('200');
+    await user.click(screen.getByLabelText('Automatic (as tall as the content)'));
+    expect(height.disabled).toBe(true);
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(onSave.mock.calls[0][1]).toMatchObject({ height: null });
+  });
+
+  it('shows a live preview with the current options', async () => {
+    const { user } = setup({ kind: 'inline', spec: taggedSpec });
+    const toggle = screen.getByRole('button', { name: 'Show preview' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    await user.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect((await screen.findByTestId('swagger')).textContent).toBe('/pets,/orders,/health tags');
+
+    await user.click(screen.getByLabelText(/^pets/));
+    await user.selectOptions(screen.getByLabelText('Expand on load'), 'collapsed');
+    expect((await screen.findByTestId('swagger')).textContent).toBe('/pets collapsed');
+
+    await user.click(screen.getByRole('button', { name: 'Hide preview' }));
+    expect(screen.queryByTestId('swagger')).toBeNull();
+  });
+
+  it('previews the chosen attachment', async () => {
+    const { user } = setup({ kind: 'attachment', attachmentId: 'att4', title: 'tagged.json' });
+    await user.click(screen.getByRole('button', { name: 'Show preview' }));
+    expect((await screen.findByTestId('swagger')).textContent).toContain('/pets');
+  });
+
+  it('suggests choosing tags for a large spec', async () => {
+    const large = JSON.stringify(generateLargeSpec({ operations: 1200 }));
+    const { user } = setup({ kind: 'inline', spec: large });
+    expect(screen.getByRole('status').textContent).toContain(
+      'This is a large specification (1200 operations).',
+    );
+    await user.click(screen.getByLabelText(/^group-00/));
+    expect(screen.queryByRole('status')).toBeNull();
   });
 });
