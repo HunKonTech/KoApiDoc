@@ -175,7 +175,7 @@ portal; wording below is for copying, adjust to the exact questions).
 
 | Scope | Used for | Endpoints |
 | --- | --- | --- |
-| `read:attachment:confluence` | List the attachments of the page that contains the macro, so the editor can choose a `.json` / `.yaml` / `.yml` file; read an attachment's metadata (name, media type, size, page) before downloading, to reject binary files, files above 2 MB and files of other pages. | `GET /wiki/api/v2/pages/{id}/attachments`, `GET /wiki/api/v2/attachments/{id}` |
+| `read:attachment:confluence` | List the attachments of the page that contains the macro, so the editor can choose a `.json` / `.yaml` / `.yml` file; read an attachment's metadata (name, media type, size, owning page) before downloading, to reject binary files, files above 2 MB and files of other pages, blog posts or custom content. | `GET /wiki/api/v2/pages/{id}/attachments`, `GET /wiki/api/v2/attachments/{id}` |
 | `readonly:content.attachment:confluence` | Download the content of the chosen attachment to display it. | `GET /wiki/rest/api/content/{pageId}/child/attachment/{id}/download` |
 
 Both scopes are read-only. All calls are made with `requestConfluence` from the browser, i.e. as the
@@ -185,14 +185,16 @@ The exact scope names are checked with `forge lint` in step 5.
 ### External hosts
 
 None. The manifest has no `permissions.external` section and no `remotes`. Remote images in
-specifications are blocked by the app's Content Security Policy.
+specifications, and any other request to another host, are blocked by the app's Content Security
+Policy; the "Authorize" dialog of Swagger UI is disabled, so token or authorization URLs in a
+specification are never contacted.
 
 ## 4. Known limitations (to state honestly)
 
-- No "Try it out" (no requests to the documented API).
+- No "Try it out" and no "Authorize" dialog (no requests to the documented API or its token URLs).
 - External `$ref`s (other files, URLs) are shown as placeholders.
 - Remote images in descriptions are not shown.
-- Attachments up to 2 MB; attachments of the same page only.
+- Specifications up to 2 MB (attachment or pasted text); attachments of the same page only.
 - PDF / Word export and printing do not include the macro.
 - Confluence Cloud only (no Data Center version).
 

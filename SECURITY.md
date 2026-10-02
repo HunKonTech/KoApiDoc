@@ -36,9 +36,12 @@ not back-ported.
 - **Untrusted specifications.** Specifications are treated as untrusted input:
   - Swagger UI sanitizes Markdown and HTML in descriptions (DOMPurify); script, `javascript:` links
     and frames are removed. KoApiDoc itself renders text only through React (no raw HTML).
-  - `$ref`s to other files or URLs are never fetched; they are replaced by a placeholder.
-  - YAML documents that expand to more than 2,000,000 values through aliases ("billion laughs")
-    are rejected before anything walks them, so a page cannot freeze its readers' browsers.
+  - `$ref`s to other files or URLs are never fetched; they are replaced by a placeholder, however
+    deep in the document they are.
+  - The 2 MB limit applies to every specification, pasted text as well as attachments. Documents
+    with more than 2,000,000 values (JSON, or YAML that expands through aliases: "billion laughs")
+    are rejected before anything walks them, so a page cannot freeze its readers' browsers. The
+    configuration does not save pasted text that breaks these limits.
   - A Content Security Policy in the macro page, in addition to the CSP of the Forge platform,
     blocks remote images (tracking pixels), requests to other hosts, frames, form posts and
     plugins (`default-src 'self'`, `connect-src 'self'`, `frame-src 'none'`,
@@ -46,8 +49,12 @@ not back-ported.
   - "Try it out" and the "Authorize" dialog are disabled: no request is ever sent to the API
     described by a specification or to its authorization or token URLs.
 - **Input checks.** Page and attachment IDs are validated before they become part of a REST path;
-  pagination only follows links on the same API; attachments above 2 MB, binary files and
-  attachments of other pages are rejected before or after download.
+  pagination only follows links that stay on the same API once `..` segments are resolved.
+  Attachments of other pages, blog posts or custom content are rejected; an attachment without an
+  owner, or whose size Confluence does not report, is rejected. The 2 MB limit is checked from the
+  metadata, from the `Content-Length` of the download and while reading it, so an oversized file
+  is never read whole. Binary files are rejected after download.
 - **Supply chain.** The production bundle is scanned for licenses and vulnerabilities before each
   release (`npm audit`, `npm run licenses`); the local mock used for tests is never part of the
-  production build. See [`docs/RELEASING.md`](docs/RELEASING.md).
+  production build. See [`docs/RELEASING.md`](docs/RELEASING.md). The CI workflows pin every
+  action to a full commit SHA; Dependabot proposes updates of those actions only.

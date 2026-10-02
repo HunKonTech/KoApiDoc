@@ -32,7 +32,9 @@ macro, never changes content, and keeps no copy.
 **What the app does not do:**
 
 - It does not send data outside Atlassian: the app has no external network access (no "egress")
-  and runs entirely on the Atlassian Forge platform.
+  and runs entirely on the Atlassian Forge platform. The "Authorize" dialog of the API
+  documentation is disabled, so nothing you type can be sent to addresses named in a
+  specification.
 - It does not load content from other servers. References to external files in a specification are
   not followed, and images that point to web addresses are blocked.
 - It does not store anything in the app's own storage, in cookies or in the browser's storage.

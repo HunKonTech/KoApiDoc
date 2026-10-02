@@ -24,7 +24,7 @@ or read from a `.json`, `.yaml` or `.yml` file attached to the same page.
 | Specification versions | Swagger 2.0, OpenAPI 3.0.x, OpenAPI 3.1.x |
 | Formats | JSON and YAML (UTF-8) |
 | Sources | text pasted into the macro, or an attachment of the same page |
-| Attachment size | up to 2 MB |
+| Specification size | up to 2 MB (attachment or pasted text) |
 | Themes | follows the Confluence light and dark theme |
 
 The macro is read-only: it shows operations, parameters, request bodies, responses, examples and
@@ -55,8 +55,9 @@ To change the macro later, edit the page, select the macro and use its edit (pen
 
 **Pasted text.** Paste the whole specification (JSON or YAML) into the text box. Below the box
 KoApiDoc tells you right away whether it is a valid Swagger 2.0 / OpenAPI 3.x document. You can
-save an invalid document, but the page then shows the error instead of the documentation. The
-pasted text is stored in the macro, as part of the page.
+save an invalid document, but the page then shows the error instead of the documentation. Text
+above 2 MB, or with too many values, cannot be saved. The pasted text is stored in the macro, as
+part of the page.
 
 **Page attachment.** Attach the specification file to the page first (for example by dragging it
 into the editor or through the page's attachments), then choose **Page attachment** in the
@@ -128,8 +129,8 @@ Details: [privacy policy](PRIVACY.md).
 
 - **Remote images are not shown.** Images in descriptions that point to a web address are
   blocked, so that opening a page never contacts other servers. Embedded (`data:`) images work.
-- **2 MB limit** for attachments. Larger files show an error; select some tags or split the
-  specification. Confluence may limit the size of a macro's configuration, so use an
+- **2 MB limit** for attachments and pasted text. Larger specifications show an error; split
+  the specification. Confluence may limit the size of a macro's configuration, so use an
   attachment for large specifications instead of pasting them.
 - **PDF and Word export, and printing.** Confluence's exports do not run app macros, so the
   documentation is missing from exported or printed pages.
@@ -142,7 +143,7 @@ Details: [privacy policy](PRIVACY.md).
 | Message | What to do |
 | --- | --- |
 | No specification yet | Edit the macro and paste a specification or choose an attachment. |
-| Invalid specification | The text is not valid JSON / YAML, the `openapi` / `swagger` field is missing or unsupported, or a YAML document expands to too many values through nested anchors and aliases (`*name`). The message points to the first problem the parser found. |
+| Invalid specification | The text is not valid JSON / YAML, the `openapi` / `swagger` field is missing or unsupported, the text is larger than 2 MB, or the document has more than 2,000,000 values (in YAML usually through nested anchors and aliases, `*name`). The message points to the first problem the parser found. |
 | The specification could not be displayed | The document was read, but its structure is not valid OpenAPI (for example a path that does not map to an object of operations). Check the document with an OpenAPI validator. |
 | Could not load *file*: You do not have permission… | You cannot view this attachment, or the app was not allowed to read it. Ask the page owner or a site administrator. |
 | Could not load *file*: The attachment was not found… | The file was deleted or moved. Edit the macro and choose another attachment. |

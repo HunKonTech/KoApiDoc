@@ -23,22 +23,22 @@ Settings > Rules > Rulesets > New ruleset > **New branch ruleset**.
 
 - Enforcement: **Evaluate** first, switch to **Active** after a week without surprises.
 - Target branches: **Include default branch**.
-- Bypass list: **Repository admin** (role: you). Mode: **Always** (so you can push hotfixes). Nobody else.
+- Bypass list: **Repository admin** (role: you). Mode: **For pull requests only**, so even an admin changes `main` only through a pull request (an admin can still merge a PR whose checks or approvals are missing). Nobody else. Hotfixes go through a PR as well.
 - Rules to tick:
   - Restrict deletions
   - Block force pushes
   - Require linear history (optional; the repo uses merge commits, so leave it off)
-  - Require a pull request before merging: required approvals **0** (you are the only reviewer; GitHub does not let you approve your own PR), dismiss stale approvals on push, require conversation resolution
+  - Require a pull request before merging: required approvals **0** (you are the only reviewer; GitHub does not let you approve your own PR; raise it to 1 once there is a second maintainer), dismiss stale approvals on push, require conversation resolution
   - Require status checks to pass: add `build` and `e2e` (the jobs of `ci.yml`; they appear in the list after one CI run), **Require branches to be up to date** on
 
 ### Ruleset B: "Only owner creates branches"
 
 - Enforcement: Evaluate first, then Active.
-- Target branches: **Include all branches** (pattern `~ALL`), **exclude** `claude/**` if Claude Code sessions should keep working.
+- Target branches: **Include all branches** (pattern `~ALL`), **exclude** `claude/**` if Claude Code sessions should keep working, and `dependabot/**` so that Dependabot can open its pull requests for the GitHub Actions (`.github/dependabot.yml`).
 - Bypass list: **Repository admin** only.
 - Rules: **Restrict creations**, **Restrict updates**, **Restrict deletions**.
 
-With Ruleset B every branch except `claude/**` can be created, updated or deleted only by an admin. Claude Code (through the Claude GitHub App) can then create and push `claude/*` branches and open pull requests, but cannot merge: `main` needs a pull request, the merge is yours.
+With Ruleset B every branch except `claude/**` and `dependabot/**` can be created, updated or deleted only by an admin. Claude Code (through the Claude GitHub App) can then create and push `claude/*` branches and open pull requests, but cannot merge: `main` needs a pull request, the merge is yours.
 
 To be stricter, drop the `claude/**` exclusion and add the Claude GitHub App to the bypass list of Ruleset B instead (bypass actors can be roles, teams and apps, not individual users). Then even `claude/*` branches are created only by you or the app.
 
@@ -55,9 +55,13 @@ To be stricter, drop the `claude/**` exclusion and add the Claude GitHub App to 
 - Settings > Actions > General:
   - "Fork pull request workflows from outside collaborators": **Require approval for all outside collaborators**.
   - Workflow permissions: **Read repository contents** by default.
-- All workflows run on GitHub-hosted runners. Do not add a self-hosted runner to a public repository: `close-external-prs.yml` (`pull_request_target`) starts for every pull request without approval.
-  - Settings > Actions > General: tick **Require actions to be pinned to a full-length commit SHA** (the workflows pin every action).
-- Settings > Code security: enable **Private vulnerability reporting**, **Dependabot alerts** and **Secret scanning with push protection**.
+  - Actions permissions: **Allow HunKonTech, and select non-HunKonTech, actions and reusable workflows** with **Allow actions created by GitHub**, and tick **Require actions to be pinned to a full-length commit SHA** (the workflows pin every action).
+- All workflows run on GitHub-hosted runners. Do not add a self-hosted runner to a public repository: `close-external-prs.yml` (`pull_request_target`) starts for every pull request without approval. Settings > Actions > Runners must be empty; for an organization runner, remove the repository from the runner group (Organization settings > Actions > Runner groups) and turn off **Allow public repositories**.
+- Settings > Code security (Advanced Security):
+  - **Private vulnerability reporting**: on.
+  - **Dependabot alerts**: on. **Dependabot security updates**: off (npm packages are updated by hand, see `docs/RELEASING.md`). `.github/dependabot.yml` asks for monthly updates of the pinned GitHub Actions only; `close-external-prs.yml` lets `dependabot[bot]` pull requests through.
+  - **Secret scanning** with **Push protection**: on.
+  - **Code scanning > CodeQL analysis > Set up > Default** (languages: JavaScript/TypeScript, GitHub Actions).
 
 ## 4. Wiki and Issues
 
@@ -69,4 +73,5 @@ To be stricter, drop the `claude/**` exclusion and add the Claude GitHub App to 
 
 1. From another GitHub account (or incognito) confirm you cannot push or create a branch.
 2. Open a PR from a `claude/test` branch: it must stay open.
-3. Try `git push origin main` as yourself without bypass: with Ruleset A active it needs a PR unless you use the admin bypass.
+3. Try `git push origin main` as yourself: with Ruleset A active and the bypass set to pull requests only, it is refused.
+4. The next pull request runs `close-external-prs` on `ubuntu-latest`, and CI stays green with SHA pinning required.

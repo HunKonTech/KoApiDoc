@@ -49,7 +49,7 @@ Megjegyzés a futtatásról: ebben a környezetben a Playwright saját böngész
 Nem ellenőrizhető Atlassian nélkül (szándékosan nem futtattam): `forge lint`, a valós Forge CSP, a valós makró-kontextus, a `requestConfluence` valós viselkedése (letöltés, átirányítás, bináris kezelés, jogosultság), az iframe automatikus magassága, a PDF-export, a makró-konfiguráció tényleges mérethatára. A `readonly:content.attachment:confluence` érvényes Forge-scope; a `read:attachment:confluence` név és az endpointok scope-megfelelése az 5. lépésben ellenőrzendő (`forge lint`).
 
 Észrevételek, nem blokkolók:
-- A Dependabot-kérdés a 4. lépésben rendezve (kézi frissítés; a workflow átengedi a botot).
+- A Dependabot-kérdés a 4. lépésben rendezve (npm: kézi frissítés). A biztonsági javítások óta a Dependabot havonta a SHA-ra rögzített GitHub Actionök frissítését kéri (`.github/dependabot.yml`); a workflow átengedi a botot.
 - Az `app.id` még placeholder (`forge register` az 5. lépésben).
 
 ## Hátralévő lépések a Marketplace-kiadásig
@@ -71,4 +71,4 @@ A 4. lépés a javasolt alapértékeket rögzítette (`MARKETPLACE-LISTING.md` 1
 5. **Biztonsági kapcsolat:** most csak GitHub private vulnerability reporting (publikus repó kell hozzá); ha szeretnél külön e-mail-címet, megadod és bekerül.
 6. **`close-external-prs` runner:** kész, `ubuntu-latest` (KOA-05, `docs/security/REMEDIATION-PLAN.md`). A self-hosted runnert a repó beállításaiban le kell választani.
 7. Mikor menjen az első push (5. lépés): a repó a beküldéshez szükséges anyaggal kész; a mock-képek elégségesek, valós képek az 5. lépés után opcionálisak.
-8. A GitHub-beállítások (a `main` védelme, collaborator lista, private vulnerability reporting), ha még nem történt meg.
+8. A GitHub-beállítások (a `main` védelme, collaborator lista, private vulnerability reporting, push protection, CodeQL, SHA-pinning kötelezővé tétele, a self-hosted runner leválasztása), ha még nem történt meg: `docs/GITHUB-SETUP.md`, KOA-11 (`docs/security/REMEDIATION-PLAN-3-5.md` B rész).

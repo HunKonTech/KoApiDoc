@@ -1,7 +1,8 @@
 # KoApiDoc – részletes javítási terv: 3–5. lépés
 
 A [`REMEDIATION-PLAN.md`](REMEDIATION-PLAN.md) 3., 4. és 5. lépésének kidolgozása. Az 1. és a 2.
-lépés kész (PR #15). Állapot: terv, kód még nem változott. Atlassian site-ra semmi nem települ.
+lépés kész (PR #15). Állapot: az A és a C rész kész ([#17](https://github.com/HunKonTech/KoApiDoc/pull/17));
+a B rész (repóbeállítások) kézi admin teendő. Atlassian site-ra semmi nem települ.
 
 Sorrend és forma:
 
@@ -157,5 +158,8 @@ Mind a GitHubon, `HunKonTech/KoApiDoc` → **Settings**. Javasolt sorrend:
 ## Nyitott döntések
 
 1. „Require approvals” a `main`-en: 0 marad (egy fős repó) vagy 1. Javaslat: 0, amíg nincs
-   második karbantartó.
-2. `.github/dependabot.yml` csak `github-actions`-re: javaslat igen.
+   második karbantartó. A `docs/GITHUB-SETUP.md` ezt írja (0, második karbantartónál 1); a
+   beállítás az admin döntése.
+2. `.github/dependabot.yml` csak `github-actions`-re: bekerült (#17), havi ütemezéssel és 7 napos
+   `cooldown`-nal. A „Protect main” mellett a „Only owner creates branches” rulesetből a
+   `dependabot/**` ágakat ki kell venni, különben a Dependabot nem tud PR-t nyitni.

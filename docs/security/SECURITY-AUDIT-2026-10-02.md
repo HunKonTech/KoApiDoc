@@ -30,7 +30,28 @@ KOA-05, KOA-03, KOA-04 (egy CI-hardening PR), utána az alacsonyak.
 
 ## 2. Találatok
 
-Státusz minden találatnál: **nyitott** (az audit nem javított semmit).
+Az audit idején minden találat **nyitott** volt (az audit nem javított semmit). Állapot a
+javítások után (frissítve: 2026-10-02, terv: [`REMEDIATION-PLAN.md`](REMEDIATION-PLAN.md)):
+
+| Találat | Állapot | Hol |
+| ------- | ------- | --- |
+| KOA-01 | javítva | [#15](https://github.com/HunKonTech/KoApiDoc/pull/15); élő ellenőrzés: 6. lépés |
+| KOA-02 | javítva | [#15](https://github.com/HunKonTech/KoApiDoc/pull/15); élő ellenőrzés: 6. lépés |
+| KOA-03 | javítva | [#15](https://github.com/HunKonTech/KoApiDoc/pull/15) |
+| KOA-04 | javítva | [#15](https://github.com/HunKonTech/KoApiDoc/pull/15); a SHA-k frissítése: `.github/dependabot.yml` ([#17](https://github.com/HunKonTech/KoApiDoc/pull/17)) |
+| KOA-05 | javítva (workflow) | [#15](https://github.com/HunKonTech/KoApiDoc/pull/15); a self-hosted runner leválasztása kézi (KOA-11) |
+| KOA-06 | javítva | [#17](https://github.com/HunKonTech/KoApiDoc/pull/17) |
+| KOA-07 | javítva | [#17](https://github.com/HunKonTech/KoApiDoc/pull/17); élő ellenőrzés: 6. lépés (a v2 metaadatban mindig van-e tulajdonos) |
+| KOA-08 | javítva | [#17](https://github.com/HunKonTech/KoApiDoc/pull/17); a Confluence macro-config korlátja: 6. lépés |
+| KOA-09 | javítva | [#17](https://github.com/HunKonTech/KoApiDoc/pull/17); élő ellenőrzés: 6. lépés (ad-e `body`-t a `requestConfluence`) |
+| KOA-10 | elfogadott kockázat | `docs/RELEASING.md`, „Known audit exceptions” (újraellenőrizve 2026-10-02: 31 advisory, production 0) |
+| KOA-11 | kézi, admin teendő | GitHub UI: [`REMEDIATION-PLAN-3-5.md`](REMEDIATION-PLAN-3-5.md) B rész, `docs/GITHUB-SETUP.md` |
+| KOA-12 | javítva | [#15](https://github.com/HunKonTech/KoApiDoc/pull/15) |
+| KOA-13 | javítva | [#17](https://github.com/HunKonTech/KoApiDoc/pull/17) |
+| KOA-14 | javítva | [#17](https://github.com/HunKonTech/KoApiDoc/pull/17) |
+| KOA-15 | javítva | [#17](https://github.com/HunKonTech/KoApiDoc/pull/17) |
+| KOA-16 | elfogadott kockázat | csak a lokális mock, a `dist` nem tartalmazza |
+| KOA-17 | elfogadott kockázat | a resolver nem hívható; az `app.id` a `forge register`-ig placeholder |
 
 ### Közepes
 
