@@ -4,7 +4,8 @@
 // URL switches (set by local.html):
 //   mode=config|view, dark=1
 //   spec=<sample>        inline samples, "saved" (from config mode) or "att-<id>" (attachment);
-//                        remote-content has untrusted Markdown (remote images, script links)
+//                        remote-content has untrusted Markdown (remote images, script links);
+//                        oauth2-* have security schemes with foreign token/authorization URLs
 //   fail=forbidden|missing|toolarge|notext|slow   simulated Confluence failures
 //   expansion=collapsed|tags|all, schemas=0|1, filter=0|1, tags=a,b, height=<px>
 //                        display options; when one is set they replace the saved ones
@@ -12,6 +13,9 @@ import petstoreJson from '../../../tests/fixtures/petstore.json?raw';
 import petstoreYaml from '../../../tests/fixtures/petstore.yaml?raw';
 import multiTag from '../../../tests/fixtures/multi-tag-3.1.json?raw';
 import externalRef from '../../../tests/fixtures/with-external-ref.json?raw';
+import oauth2Password from '../../../tests/fixtures/malicious/oauth2-password.json?raw';
+import oauth2Implicit from '../../../tests/fixtures/malicious/oauth2-implicit.json?raw';
+import oauth2Swagger2 from '../../../tests/fixtures/malicious/oauth2-swagger2.json?raw';
 import { generateLargeSpec, LARGE_SAMPLES } from '../../../tests/fixtures/largeSpec';
 
 const params = new URLSearchParams(location.search);
@@ -102,6 +106,10 @@ const samples: Record<string, () => object> = {
   'multi-tag': () => ({ source: 'inline', spec: multiTag }),
   'circular-anchor': () => ({ source: 'inline', spec: circularAnchor }),
   'remote-content': () => ({ source: 'inline', spec: remoteContent }),
+  // Security schemes pointing at a foreign host: no "Authorize" UI may appear.
+  'oauth2-password': () => ({ source: 'inline', spec: oauth2Password }),
+  'oauth2-implicit': () => ({ source: 'inline', spec: oauth2Implicit }),
+  'oauth2-swagger2': () => ({ source: 'inline', spec: oauth2Swagger2 }),
   bad: () => ({ spec: '{"openapi": ' }),
   empty: () => ({ spec: '' }),
   'att-deleted': () => ({ source: 'attachment', attachmentId: 'att9999', title: 'deleted.yaml' }),

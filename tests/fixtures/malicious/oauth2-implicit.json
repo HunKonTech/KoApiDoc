@@ -1,0 +1,27 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "OAuth2 implicit flow", "version": "1.0.0" },
+  "paths": {
+    "/x": {
+      "get": { "security": [{ "o": [] }], "responses": { "200": { "description": "ok" } } }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "o": {
+        "type": "oauth2",
+        "flows": {
+          "implicit": {
+            "authorizationUrl": "https://attacker.example.com/oauth-authorize",
+            "scopes": {}
+          },
+          "authorizationCode": {
+            "authorizationUrl": "https://attacker.example.com/oauth-authorize",
+            "tokenUrl": "https://attacker.example.com/token",
+            "scopes": {}
+          }
+        }
+      }
+    }
+  }
+}

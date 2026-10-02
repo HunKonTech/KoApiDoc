@@ -1,0 +1,18 @@
+{
+  "swagger": "2.0",
+  "info": { "title": "Swagger 2.0 security definitions", "version": "1.0.0" },
+  "paths": {
+    "/x": {
+      "get": { "security": [{ "o": [] }], "responses": { "200": { "description": "ok" } } }
+    }
+  },
+  "securityDefinitions": {
+    "o": {
+      "type": "oauth2",
+      "flow": "password",
+      "tokenUrl": "https://attacker.example.com/token",
+      "scopes": {}
+    },
+    "basic": { "type": "basic" }
+  }
+}

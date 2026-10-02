@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!--
       Defense in depth on top of the Forge CSP: a spec's Markdown may reference remote
-      images (e.g. tracking pixels); those are never loaded. Only restricts what is listed.
+      images (e.g. tracking pixels); those are never loaded. The build replaces this with a
+      stricter policy (no requests, frames or form posts), see vite.config.ts.
     -->
     <meta
       http-equiv="Content-Security-Policy"
