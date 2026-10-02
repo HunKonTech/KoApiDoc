@@ -1,7 +1,7 @@
 # KoApiDoc – biztonsági javítási terv
 
 Forrás: [`SECURITY-AUDIT-2026-10-02.md`](SECURITY-AUDIT-2026-10-02.md) (17 találat: 5 közepes, 8
-alacsony, 4 info, kritikus/magas nincs). Állapot: terv, még semmi nincs javítva. Atlassian site-ra
+alacsony, 4 info, kritikus/magas nincs). Állapot: az 1. és a 2. lépés kész (PR #15); a 3–5. lépés részletes terve: [`REMEDIATION-PLAN-3-5.md`](REMEDIATION-PLAN-3-5.md). Atlassian site-ra
 csak a 6. lépésben települ valami (dev site), és az is csak külön jóváhagyással.
 
 ## Áttekintés
