@@ -1,6 +1,7 @@
 # KoApiDoc – kiberbiztonsági audit terv
 
-Állapot: terv (az audit még nem futott). Alap: `main` @ `3d48421`. Atlassian felé semmi nem települ; minden ellenőrzés lokálisan / a repón fut.
+Állapot: az audit lefutott 2026-10-02-án (`main` @ `50950cf`), eredmény:
+[`docs/security/SECURITY-AUDIT-2026-10-02.md`](security/SECURITY-AUDIT-2026-10-02.md). A terv alapja: `main` @ `3d48421`. Atlassian felé semmi nem települ; minden ellenőrzés lokálisan / a repón fut.
 
 ## 1. Cél és scope
 
