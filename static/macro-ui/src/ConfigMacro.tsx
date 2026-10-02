@@ -8,7 +8,7 @@ import {
   type DisplayOptions,
   type Expansion,
 } from './lib/options';
-import { parseSpec } from './lib/parseSpec';
+import { parseSpec, type ParseErrorCode } from './lib/parseSpec';
 import { countOperations, listTags, type TagInfo } from './lib/specFilter';
 import {
   describeSourceError,
@@ -17,6 +17,8 @@ import {
   type SpecSource,
 } from './lib/specSource';
 import { SpecDisplay } from './ViewMacro';
+
+const BLOCKING: ParseErrorCode[] = ['too-large', 'too-complex'];
 
 type Props = {
   initial: SpecRef;
@@ -54,6 +56,8 @@ export function ConfigMacro({ initial, initialOptions, pageId, source, onSave, o
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const check = useMemo(() => (spec.trim() === '' ? null : parseSpec(spec)), [spec]);
+  // Too big or too complex text would only slow down every page view: it is not saved.
+  const blocked = check !== null && !check.ok && BLOCKING.includes(check.code);
 
   useEffect(() => {
     if (kind !== 'attachment' || list.status !== 'idle' || !pageId) return;
@@ -98,7 +102,7 @@ export function ConfigMacro({ initial, initialOptions, pageId, source, onSave, o
       : null;
   }, [specText]);
 
-  const canSave = !saving && (kind === 'inline' || selected !== null);
+  const canSave = !saving && (kind === 'inline' ? !blocked : selected !== null);
   const update = (changes: Partial<DisplayOptions>) => setOptions((o) => ({ ...o, ...changes }));
 
   const save = async () => {
@@ -163,7 +167,10 @@ export function ConfigMacro({ initial, initialOptions, pageId, source, onSave, o
           {check && check.ok && <p className="ko-hint ko-ok">Valid {check.version} document.</p>}
           {check && !check.ok && (
             <p className="ko-hint ko-error" role="alert">
-              {check.message} You can still save it, but the macro will show this error.
+              {check.message}{' '}
+              {blocked
+                ? 'It cannot be saved.'
+                : 'You can still save it, but the macro will show this error.'}
             </p>
           )}
         </>

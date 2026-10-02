@@ -1,8 +1,10 @@
 import { load as loadYaml } from 'js-yaml';
+import { formatBytes, MAX_SPEC_BYTES } from './limits';
 
 export type SpecVersion = 'swagger-2.0' | 'openapi-3.0' | 'openapi-3.1';
 
-export type ParseErrorCode = 'empty' | 'syntax' | 'too-complex' | 'not-object' | 'not-openapi';
+export type ParseErrorCode =
+  'empty' | 'too-large' | 'syntax' | 'too-complex' | 'not-object' | 'not-openapi';
 
 export type ParseResult =
   | { ok: true; spec: Record<string, unknown>; version: SpecVersion }
@@ -11,21 +13,38 @@ export type ParseResult =
 const fail = (code: ParseErrorCode, message: string): ParseResult => ({ ok: false, code, message });
 
 /**
- * Most values a YAML document may expand to. YAML aliases (`*name`) are shared, not
+ * Most values a document may expand to. YAML aliases (`*name`) are shared, not
  * copied, so a few hundred bytes can stand for billions of values ("billion laughs");
  * walking such a tree would freeze the reader's browser. A 2 MB specification has far
- * fewer values (the 2 MB test spec: about 40 000).
+ * fewer values (the 2 MB test spec: about 40 000). JSON has no aliases, so within the
+ * size limit it stays far below; it is checked all the same, as everything that walks
+ * the parsed spec relies on this bound.
  */
-export const MAX_YAML_NODES = 2_000_000;
+export const MAX_NODES = 2_000_000;
+
+/** Limits of `parseSpec`; only tests use other values than the defaults. */
+export type ParseLimits = { maxBytes: number; maxNodes: number };
+
+const DEFAULT_LIMITS: ParseLimits = { maxBytes: MAX_SPEC_BYTES, maxNodes: MAX_NODES };
 
 const errorText = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
 /**
- * Parses an OpenAPI / Swagger document given as JSON or YAML text.
+ * Parses an OpenAPI / Swagger document given as JSON or YAML text. The same size
+ * limit applies as for attachments, so pasted text is not a way around it.
  * Never throws: every problem is reported as a readable message.
  */
-export function parseSpec(input: string | null | undefined): ParseResult {
+export function parseSpec(
+  input: string | null | undefined,
+  { maxBytes, maxNodes }: ParseLimits = DEFAULT_LIMITS,
+): ParseResult {
   const raw = input ?? '';
+  if (exceedsBytes(raw, maxBytes)) {
+    return fail(
+      'too-large',
+      `The specification is larger than the ${formatBytes(maxBytes)} limit.`,
+    );
+  }
   const text = (raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw).trim();
   if (text === '') {
     return fail('empty', 'The specification is empty.');
@@ -43,10 +62,13 @@ export function parseSpec(input: string | null | undefined): ParseResult {
     );
   }
 
-  if (!looksLikeJson && exceedsNodes(doc, MAX_YAML_NODES)) {
+  if (exceedsNodes(doc, maxNodes)) {
+    const max = maxNodes.toLocaleString('en');
     return fail(
       'too-complex',
-      `The YAML document expands to more than ${MAX_YAML_NODES.toLocaleString('en')} values through anchors and aliases (*name). Remove the nested aliases or use JSON.`,
+      looksLikeJson
+        ? `The specification has more than ${max} values.`
+        : `The YAML document expands to more than ${max} values through anchors and aliases (*name). Remove the nested aliases or use JSON.`,
     );
   }
 
@@ -77,6 +99,12 @@ function detectVersion(spec: Record<string, unknown>): SpecVersion | null {
     if (/^3\.1(\.\d+)?$/.test(openapi)) return 'openapi-3.1';
   }
   return null;
+}
+
+/** True when `text` is more than `max` bytes as UTF-8. */
+function exceedsBytes(text: string, max: number): boolean {
+  // A UTF-16 code unit is at least one UTF-8 byte: clearly oversized text is not encoded.
+  return text.length > max || new TextEncoder().encode(text).byteLength > max;
 }
 
 /** True when walking `doc` (shared nodes counted every time they occur) visits more than `max` values. */

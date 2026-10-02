@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ConfigMacro } from '../../static/macro-ui/src/ConfigMacro';
 import { DEFAULT_OPTIONS, type DisplayOptions } from '../../static/macro-ui/src/lib/options';
 import { generateLargeSpec } from '../fixtures/largeSpec';
+import { MAX_SPEC_BYTES } from '../../static/macro-ui/src/lib/limits';
 import { MockSpecSource, type MockAttachment } from '../../static/macro-ui/src/lib/mockSpecSource';
 import type { SpecRef, SpecSource } from '../../static/macro-ui/src/lib/specSource';
 
@@ -82,6 +83,18 @@ describe('ConfigMacro', () => {
       { kind: 'inline', spec: 'swagger: "2.0"' },
       DEFAULT_OPTIONS,
     );
+  });
+
+  it('does not save pasted text over the size limit', async () => {
+    const huge = `openapi: 3.0.3\ninfo: {title: x, version: "1"}\nx-pad: ${'a'.repeat(MAX_SPEC_BYTES)}\n`;
+    const { onSave, user } = setup({ kind: 'inline', spec: huge });
+    expect(screen.getByRole('alert').textContent).toBe(
+      'The specification is larger than the 2.0 MB limit. It cannot be saved.',
+    );
+    const save = screen.getByRole('button', { name: 'Save' }) as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
+    await user.click(save);
+    expect(onSave).not.toHaveBeenCalled();
   });
 
   it('lists only spec attachments with their size and saves the choice', async () => {
