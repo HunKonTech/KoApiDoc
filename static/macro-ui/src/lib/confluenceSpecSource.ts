@@ -54,8 +54,13 @@ export class ConfluenceSpecSource implements SpecSource {
     const meta = await this.getJson(`/wiki/api/v2/attachments/${attachmentId}`);
     const info = toAttachmentInfo(meta);
     if (!info) throw badResponse('attachment');
-    const owner = (meta as { pageId?: unknown }).pageId;
-    if (owner !== undefined && String(owner) !== pageId) throw new SpecSourceError('missing');
+    // Only attachments of this page: not of another page, blog post or custom content,
+    // and not one whose owner Confluence does not report.
+    const { pageId: page, blogPostId, customContentId } = meta as Record<string, unknown>;
+    const owner = page ?? blogPostId ?? customContentId;
+    if ((typeof owner !== 'string' && typeof owner !== 'number') || String(owner) !== pageId) {
+      throw new SpecSourceError('missing');
+    }
     if (!isSupportedSpecFile(info)) throw new SpecSourceError('unsupported');
     if (info.fileSize > MAX_SPEC_BYTES) throw new SpecSourceError('too-large');
 

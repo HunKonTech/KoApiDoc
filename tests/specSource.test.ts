@@ -199,6 +199,17 @@ describe('ConfluenceSpecSource.loadAttachment', () => {
     ]);
   });
 
+  it.each([
+    ['a numeric page id', { pageId: 123 }],
+    ['a blog post id', { pageId: undefined, blogPostId: '123' }],
+    ['a custom content id', { pageId: undefined, customContentId: '123' }],
+  ])('loads an attachment whose owner is given as %s', async (_, owner) => {
+    const { source } = confluence((path) =>
+      path === download ? new Response(petstore) : json(meta(owner)),
+    );
+    await expect(source.loadAttachment('123', 'att1')).resolves.toBe(petstore);
+  });
+
   it('adds the att prefix for the v1 download', async () => {
     const { request, source } = confluence((path) =>
       path.endsWith('/download') ? new Response('{}') : json(meta({ id: '1' })),
@@ -212,6 +223,10 @@ describe('ConfluenceSpecSource.loadAttachment', () => {
     ['not a spec file', meta({ title: 'notes.txt' }), 'unsupported'],
     ['an image', meta({ title: 'x.json', mediaType: 'image/png' }), 'unsupported'],
     ['on another page', meta({ pageId: '999' }), 'missing'],
+    ['without an owner', meta({ pageId: undefined }), 'missing'],
+    ['owned by null', meta({ pageId: null }), 'missing'],
+    ['on another blog post', meta({ pageId: undefined, blogPostId: '999' }), 'missing'],
+    ['on other custom content', meta({ pageId: undefined, customContentId: '999' }), 'missing'],
   ])('does not download an attachment that is %s', async (_, body, expected) => {
     const { request, source } = confluence(() => json(body));
     expect(await code(source.loadAttachment('123', 'att1'))).toBe(expected);
