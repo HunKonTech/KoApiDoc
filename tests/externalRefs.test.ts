@@ -36,6 +36,67 @@ describe('stripExternalRefs', () => {
     expect(JSON.stringify(spec)).toBe(before);
   });
 
+  /** `levels` objects nested under `key`, with `leaf` at the bottom. */
+  const nest = (levels: number, leaf: unknown, key = 'a') => {
+    let node = leaf;
+    for (let i = 0; i < levels; i++) node = { [key]: node };
+    return node;
+  };
+  /** The value `levels` steps down `key`, walked without recursion. */
+  const bottom = (node: unknown, levels: number, key = 'a') => {
+    for (let i = 0; i < levels; i++) node = (node as Record<string, unknown>)[key];
+    return node;
+  };
+
+  it.each([205, 5_000, 20_000])('replaces an external ref %i levels deep', (levels) => {
+    const ref = `https://example.com/deep-${levels}.json`;
+    const spec = { openapi: '3.0.3', deep: nest(levels, { $ref: ref }) };
+    const r = stripExternalRefs(spec);
+    expect(r.refs).toEqual([ref]);
+    expect(bottom(r.spec.deep, levels)).toEqual({
+      description: `External reference not supported: ${ref}`,
+    });
+    // The input is not modified.
+    expect(bottom(spec.deep, levels)).toEqual({ $ref: ref });
+  });
+
+  it('replaces refs in arrays and keeps deep local refs', () => {
+    const local = { $ref: '#/components/schemas/Item' };
+    const spec = {
+      openapi: '3.0.3',
+      list: [1, { $ref: 'https://example.com/a.json' }, nest(300, [local])],
+    };
+    const r = stripExternalRefs(spec);
+    expect(r.refs).toEqual(['https://example.com/a.json']);
+    const list = r.spec.list as unknown[];
+    expect(list[0]).toBe(1);
+    expect(list[1]).toEqual({
+      description: 'External reference not supported: https://example.com/a.json',
+    });
+    expect(bottom(list[2], 300)).toEqual([local]);
+    expect(bottom(list[2], 300)).not.toBe(bottom(spec.list[2], 300));
+  });
+
+  it('lists the targets in document order', () => {
+    const r = stripExternalRefs({
+      openapi: '3.0.3',
+      a: { x: { $ref: 'https://example.com/1.json' }, y: [{ $ref: 'https://example.com/2.json' }] },
+      b: { $ref: 'https://example.com/3.json' },
+    });
+    expect(r.refs).toEqual([
+      'https://example.com/1.json',
+      'https://example.com/2.json',
+      'https://example.com/3.json',
+    ]);
+    expect(Object.keys(r.spec)).toEqual(['openapi', 'a', 'b']);
+  });
+
+  it('replaces the ref of the deep malicious fixture', () => {
+    const r = stripExternalRefs(fixture('malicious/deep-external-ref.json'));
+    expect(r.refs).toEqual(['https://attacker.example.com/deep.json']);
+    expect(JSON.stringify(r.spec)).not.toContain('"$ref":"https:');
+  });
+
   it('reports each external target once', () => {
     const ref = { $ref: 'https://example.com/a.json' };
     const r = stripExternalRefs({ openapi: '3.0.0', a: ref, b: [ref, ref] });

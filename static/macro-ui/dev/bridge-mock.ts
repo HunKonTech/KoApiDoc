@@ -5,7 +5,8 @@
 //   mode=config|view, dark=1
 //   spec=<sample>        inline samples, "saved" (from config mode) or "att-<id>" (attachment);
 //                        remote-content has untrusted Markdown (remote images, script links);
-//                        oauth2-* have security schemes with foreign token/authorization URLs
+//                        oauth2-* have security schemes with foreign token/authorization URLs;
+//                        deep-external-ref has an external $ref 210 levels deep
 //   fail=forbidden|missing|toolarge|notext|slow   simulated Confluence failures
 //   expansion=collapsed|tags|all, schemas=0|1, filter=0|1, tags=a,b, height=<px>
 //                        display options; when one is set they replace the saved ones
@@ -16,6 +17,9 @@ import externalRef from '../../../tests/fixtures/with-external-ref.json?raw';
 import oauth2Password from '../../../tests/fixtures/malicious/oauth2-password.json?raw';
 import oauth2Implicit from '../../../tests/fixtures/malicious/oauth2-implicit.json?raw';
 import oauth2Swagger2 from '../../../tests/fixtures/malicious/oauth2-swagger2.json?raw';
+// Generated: a schema with `properties.a` nested 210 times around
+// { $ref: 'https://attacker.example.com/deep.json' }.
+import deepExternalRef from '../../../tests/fixtures/malicious/deep-external-ref.json?raw';
 import { generateLargeSpec, LARGE_SAMPLES } from '../../../tests/fixtures/largeSpec';
 
 const params = new URLSearchParams(location.search);
@@ -110,6 +114,8 @@ const samples: Record<string, () => object> = {
   'oauth2-password': () => ({ source: 'inline', spec: oauth2Password }),
   'oauth2-implicit': () => ({ source: 'inline', spec: oauth2Implicit }),
   'oauth2-swagger2': () => ({ source: 'inline', spec: oauth2Swagger2 }),
+  // Deeper than the old 200-level walk of stripExternalRefs (KOA-06).
+  'deep-external-ref': () => ({ source: 'inline', spec: deepExternalRef }),
   bad: () => ({ spec: '{"openapi": ' }),
   empty: () => ({ spec: '' }),
   'att-deleted': () => ({ source: 'attachment', attachmentId: 'att9999', title: 'deleted.yaml' }),

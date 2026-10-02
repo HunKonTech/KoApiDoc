@@ -88,6 +88,16 @@ test.describe('untrusted content', () => {
     await expect(page.locator('.info')).toContainText('script link');
     await expect(page.locator('.info [href^="javascript:" i]')).toHaveCount(0);
   });
+
+  test('external $ref 210 levels deep: replaced, nothing is fetched', async ({ page }) => {
+    await open(page, { spec: 'deep-external-ref' });
+    await expect(page.getByRole('status')).toContainText('External references are not supported');
+    await expect(page.getByRole('status')).toContainText('https://attacker.example.com/deep.json');
+    // Swagger UI itself refuses documents nested deeper than 100 levels; wait until it
+    // has done so, then check that not even the CSP had to stop a request.
+    await expect(swagger(page)).toContainText('nesting exceeded maxDepth');
+    expect(blockedByCsp).toEqual([]);
+  });
 });
 
 test.describe('security schemes', () => {
