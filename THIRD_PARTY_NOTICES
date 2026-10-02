@@ -6,16 +6,20 @@ license; these do not restrict the license of KoApiDoc itself.
 
 Runtime (bundled into the Custom UI)
 ------------------------------------
-- swagger-ui-react / swagger-ui  - Apache-2.0  - https://github.com/swagger-api/swagger-ui
-- react, react-dom               - MIT         - https://github.com/facebook/react
-- js-yaml                        - MIT         - https://github.com/nodeca/js-yaml
-- @forge/bridge                  - Atlassian Forge terms - https://developer.atlassian.com/platform/forge/
-- @forge/resolver                - Atlassian Forge terms - https://developer.atlassian.com/platform/forge/
+- swagger-ui-react 5.33.1 / swagger-ui  - Apache-2.0  - https://github.com/swagger-api/swagger-ui
+- react, react-dom 19.3.0               - MIT         - https://github.com/facebook/react
+- js-yaml 5.4.2 (and 4.x copies of swagger-ui-react and swagger-client) - MIT
+                                                      - https://github.com/nodeca/js-yaml
+- dompurify 3.4.16                      - MPL-2.0 OR Apache-2.0 (used under Apache-2.0)
+                                                      - https://github.com/cure53/DOMPurify
+- @forge/bridge 7.1.0                   - Atlassian Forge terms - https://developer.atlassian.com/platform/forge/
+- @forge/resolver 2.0.0 (backend function) - Atlassian Forge terms - https://developer.atlassian.com/platform/forge/
 
-Transitive packages in the bundle (license scan of 2026-10-02, step 3)
----------------------------------------------------------------------
+Transitive packages in the bundle (license scan of 2026-10-02, step 4, release 0.1.0)
+--------------------------------------------------------------------------------------
 The packages below were read from the source maps of the production build
-(106 packages) and checked with `npm run licenses` (license-checker).
+(`vite build --sourcemap`, 106 packages) and matched with `license-checker`
+(`npm run licenses` prints the summary of the whole production dependency tree).
 
 - MIT (78): among others immutable, redux, react-redux, reselect, ramda, lodash,
   remarkable, autolinker, react-syntax-highlighter, lowlight, @tanstack/react-virtual,
@@ -29,9 +33,15 @@ The packages below were read from the source maps of the production build
 - MPL-2.0 OR Apache-2.0: dompurify (used under Apache-2.0).
 - 0BSD: tslib.
 - Unlicense: zenscroll.
-- Atlassian terms: @forge/bridge, @forge/egress, @forge/i18n (dependencies of @forge/bridge).
+- Atlassian terms: @forge/bridge, @forge/egress, @forge/i18n (dependencies of @forge/bridge;
+  @forge/i18n declares no license field and is covered by the Atlassian developer terms).
 
 No GPL, LGPL or AGPL licensed package is part of the bundle.
+
+Packages in the production dependency tree that are NOT in the bundle (not shipped):
+argparse (Python-2.0, command line of js-yaml), glob / minimatch / lru-cache / minipass /
+path-scurry (BlueOak-1.0.0) and @forge/manifest (Atlassian terms), a dependency of
+@forge/bridge that the bundler leaves out.
 
 Development only (not shipped)
 ------------------------------
@@ -41,7 +51,7 @@ Development only (not shipped)
   used by the component tests only; the root copies of react / react-dom / @types/react are
   test-only too (the shipped React comes from static/macro-ui).
 - @playwright/test (Apache-2.0) and @axe-core/playwright / axe-core (MPL-2.0), used by the
-  end-to-end and accessibility tests only.
+  end-to-end and accessibility tests and to generate the Marketplace screenshots only.
 
 Transitive dependencies of the bundled packages carry their own licenses; run the license
-scan (`npm run licenses`) before each release and update this file.
+scan before each release and update this file (see docs/RELEASING.md).

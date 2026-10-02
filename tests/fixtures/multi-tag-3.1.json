@@ -3,7 +3,7 @@
   "info": {
     "title": "Bookshop API",
     "version": "2.1.0",
-    "description": "Fixture with several tags, shared components and OpenAPI 3.1 features.",
+    "description": "Catalogue, orders and customer accounts of an example bookshop (several tags, shared components, OpenAPI 3.1 features).",
     "license": { "name": "MIT", "identifier": "MIT" }
   },
   "tags": [

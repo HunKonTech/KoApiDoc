@@ -12,16 +12,27 @@ const swagger = (page: Page) => page.locator('.ko-swagger .swagger-ui');
 /** Operations under paths (webhooks are listed separately by Swagger UI). */
 const operations = (page: Page) => page.locator('.ko-swagger .opblock:not(.webhooks .opblock)');
 const alert = (page: Page) => page.getByRole('alert');
+/** Makes the lazy Swagger UI chunk fail to download: the renderer fails, the error boundary shows. */
+const breakRenderer = (page: Page) =>
+  page.route(/\/SwaggerView-[^/]*\.js$/, (route) => route.abort('failed'));
 
-// Every test: no request leaves localhost and no uncaught exception happens.
+// Every test: no request leaves localhost and no uncaught exception happens. Requests
+// that the Content Security Policy stops before they reach the network are listed apart.
 let external: string[];
+let blockedByCsp: string[];
 let pageErrors: string[];
 test.beforeEach(async ({ page, baseURL }) => {
   external = [];
+  blockedByCsp = [];
   pageErrors = [];
   page.on('request', (request) => {
     const url = request.url();
     if (!url.startsWith(baseURL!) && !/^(data|blob):/.test(url)) external.push(url);
+  });
+  page.on('requestfailed', (request) => {
+    if (request.failure()?.errorText !== 'csp') return;
+    external = external.filter((url) => url !== request.url());
+    blockedByCsp.push(request.url());
   });
   page.on('pageerror', (error) => pageErrors.push(error.message));
 });
@@ -66,6 +77,19 @@ test.describe('sources and formats', () => {
   });
 });
 
+test.describe('untrusted content', () => {
+  test('remote images in descriptions are blocked, script links neutralised', async ({ page }) => {
+    await open(page, { spec: 'remote-content' });
+    await expect(page.locator('.info .title')).toContainText('Remote content');
+    await expect(page.locator('.info img')).toHaveCount(2);
+    await expect.poll(() => blockedByCsp.length).toBe(2);
+    expect(blockedByCsp.every((url) => url.startsWith('https://tracker.example.com/'))).toBe(true);
+    // The Markdown renderer drops the javascript: link, the text stays.
+    await expect(page.locator('.info')).toContainText('script link');
+    await expect(page.locator('.info [href^="javascript:" i]')).toHaveCount(0);
+  });
+});
+
 test.describe('error states', () => {
   for (const [fail, message] of [
     ['forbidden', /do not have permission/],
@@ -92,10 +116,17 @@ test.describe('error states', () => {
     await expect(page.getByText(/No specification yet/)).toBeVisible();
   });
 
-  test('a spec that breaks the renderer shows the error boundary, focused', async ({ page }) => {
-    await open(page, { spec: 'broken-structure' });
+  test('a renderer failure shows the error boundary, focused', async ({ page }) => {
+    await breakRenderer(page);
+    await open(page, { spec: 'multi-tag' });
     await expect(alert(page)).toContainText('The specification could not be displayed');
     await expect(alert(page)).toBeFocused();
+  });
+
+  test('a YAML document that expands endlessly is rejected', async ({ page }) => {
+    await open(page, { spec: 'circular-anchor' });
+    await expect(alert(page)).toContainText('Invalid specification');
+    await expect(alert(page)).toContainText('anchors and aliases');
   });
 
   test('an attachment above 2 MB gives the limit message', async ({ page }) => {
@@ -277,22 +308,26 @@ test.describe('large specifications', () => {
 });
 
 test.describe('accessibility (axe)', () => {
-  const cases: [string, Record<string, string>][] = [
+  const cases: [string, Record<string, string>, { broken?: boolean }?][] = [
     ['view, light', { spec: 'multi-tag', expansion: 'all' }],
     ['view, dark', { spec: 'multi-tag', expansion: 'all', dark: '1' }],
     ['view, fixed height and tags', { spec: 'multi-tag', height: '400', tags: 'books' }],
     ['view, Swagger 2.0 YAML', { spec: 'petstore-yaml', expansion: 'all' }],
     ['view, external $ref warning', { spec: 'external-ref' }],
     ['view, load error', { spec: 'att-att1001', fail: 'forbidden' }],
-    ['view, error boundary', { spec: 'broken-structure' }],
+    ['view, error boundary', { spec: 'multi-tag' }, { broken: true }],
+    ['view, invalid specification', { spec: 'circular-anchor' }],
     ['config, inline', { mode: 'config', spec: 'multi-tag' }],
     ['config, attachment, dark', { mode: 'config', spec: 'att-att1003', dark: '1' }],
   ];
-  for (const [name, query] of cases) {
+  for (const [name, query, setup] of cases) {
     test(name, async ({ page }) => {
+      if (setup?.broken) await breakRenderer(page);
       await open(page, query);
       await expect(page.locator('#root > *').first()).toBeVisible();
-      if (query.mode !== 'config' && !query.fail && query.spec !== 'broken-structure') {
+      if (setup?.broken || query.spec === 'circular-anchor') {
+        await expect(alert(page)).toBeVisible();
+      } else if (query.mode !== 'config' && !query.fail) {
         await expect(operations(page).first()).toBeVisible();
       } else if (query.mode === 'config') {
         await expect(page.getByText(/tag\(s\) are shown|operations are shown/)).toBeVisible();

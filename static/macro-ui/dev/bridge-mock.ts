@@ -3,7 +3,8 @@
 //
 // URL switches (set by local.html):
 //   mode=config|view, dark=1
-//   spec=<sample>        inline samples, "saved" (from config mode) or "att-<id>" (attachment)
+//   spec=<sample>        inline samples, "saved" (from config mode) or "att-<id>" (attachment);
+//                        remote-content has untrusted Markdown (remote images, script links)
 //   fail=forbidden|missing|toolarge|notext|slow   simulated Confluence failures
 //   expansion=collapsed|tags|all, schemas=0|1, filter=0|1, tags=a,b, height=<px>
 //                        display options; when one is set they replace the saved ones
@@ -30,15 +31,30 @@ const large = (name: keyof typeof LARGE_SAMPLES) =>
 const contentOf = (f: MockFile) => (typeof f.content === 'string' ? f.content : f.content());
 
 /**
- * Parses and passes the version check, but the YAML anchor refers to itself: the
- * renderer fails on the circular structure and the error boundary takes over.
+ * Valid YAML with the version field, but the anchor refers to itself: the document
+ * expands endlessly, so parseSpec rejects it before anything walks it.
  */
-const brokenStructure = `openapi: 3.0.3
-info: { title: Broken structure, version: 1.0.0 }
+const circularAnchor = `openapi: 3.0.3
+info: { title: Circular anchor, version: 1.0.0 }
 paths: {}
 x-loop: &loop
   self: *loop
 `;
+
+/**
+ * Untrusted Markdown in descriptions: remote images (tracking pixels) and script URLs.
+ * The images must be blocked by the CSP of index.html, the links neutralised.
+ */
+const remoteContent = JSON.stringify({
+  openapi: '3.0.3',
+  info: {
+    title: 'Remote content',
+    version: '1.0.0',
+    description:
+      '![pixel](https://tracker.example.com/pixel.png)\n\n<img src="https://tracker.example.com/img.png">\n\n[script link](javascript:alert(1))',
+  },
+  paths: {},
+});
 
 const attachments: MockFile[] = [
   { id: 'att1001', title: 'petstore.json', mediaType: 'application/json', content: petstoreJson },
@@ -84,7 +100,8 @@ const samples: Record<string, () => object> = {
   'petstore-yaml': () => ({ source: 'inline', spec: petstoreYaml }),
   'external-ref': () => ({ source: 'inline', spec: externalRef }),
   'multi-tag': () => ({ source: 'inline', spec: multiTag }),
-  'broken-structure': () => ({ source: 'inline', spec: brokenStructure }),
+  'circular-anchor': () => ({ source: 'inline', spec: circularAnchor }),
+  'remote-content': () => ({ source: 'inline', spec: remoteContent }),
   bad: () => ({ spec: '{"openapi": ' }),
   empty: () => ({ spec: '' }),
   'att-deleted': () => ({ source: 'attachment', attachmentId: 'att9999', title: 'deleted.yaml' }),

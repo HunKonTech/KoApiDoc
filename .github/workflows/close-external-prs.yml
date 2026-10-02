@@ -10,11 +10,13 @@ permissions:
 jobs:
   close:
     runs-on: self-hosted
-    # Allowed: the maintainer, and branches of this repository named claude/*
+    # Allowed: the maintainer, Dependabot (only acts if enabled in the repository
+    # settings, see docs/RELEASING.md), and branches of this repository named claude/*
     # (only people with write access can push those; fork PRs never match).
     # repository_owner is the HunKonTech organization, not a person.
     if: >-
       github.event.pull_request.user.login != 'BenKoncsik' &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
       github.event.pull_request.author_association != 'OWNER' &&
       github.event.pull_request.author_association != 'MEMBER' &&
       !(github.event.pull_request.head.repo.full_name == github.repository &&
@@ -26,4 +28,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: |
-          gh pr close "$PR_URL" --comment "Köszönjük, de ez a repó külső pull requesteket nem fogad el. Hibát issue-ban jelezhetsz."
+          gh pr close "$PR_URL" --comment "Thank you, but this repository does not accept external pull requests (see CONTRIBUTING.md). Please report bugs and ideas in an issue. / Köszönjük, de ez a repó külső pull requesteket nem fogad el. Hibát issue-ban jelezhetsz."
