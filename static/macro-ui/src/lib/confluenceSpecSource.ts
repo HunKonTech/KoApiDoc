@@ -62,13 +62,20 @@ export class ConfluenceSpecSource implements SpecSource {
       throw new SpecSourceError('missing');
     }
     if (!isSupportedSpecFile(info)) throw new SpecSourceError('unsupported');
-    if (info.fileSize > MAX_SPEC_BYTES) throw new SpecSourceError('too-large');
+    const { fileSize } = meta as Record<string, unknown>;
+    if (typeof fileSize !== 'number' || !(fileSize >= 0)) {
+      throw new SpecSourceError('failed', 'Confluence did not report the attachment size.');
+    }
+    if (fileSize > MAX_SPEC_BYTES) throw new SpecSourceError('too-large');
 
     const id = attachmentId.startsWith('att') ? attachmentId : `att${attachmentId}`;
     const response = await this.send(
       `/wiki/rest/api/content/${pageId}/child/attachment/${id}/download`,
     );
-    const bytes = await this.withTimeout(readBytes(response));
+    // The metadata may be out of date: the download is limited too.
+    const length = Number(response.headers?.get('Content-Length') ?? NaN);
+    if (length > MAX_SPEC_BYTES) throw new SpecSourceError('too-large');
+    const bytes = await this.withTimeout(readBytes(response, MAX_SPEC_BYTES));
     if (bytes.byteLength > MAX_SPEC_BYTES) throw new SpecSourceError('too-large');
     const text = decodeText(bytes);
     if (text === null) throw new SpecSourceError('not-text');
@@ -136,7 +143,33 @@ function toAttachmentInfo(item: unknown): AttachmentInfo | null {
   };
 }
 
-async function readBytes(response: Response): Promise<Uint8Array> {
+/**
+ * Reads the body, stopping as soon as it is over `limit` bytes when the response
+ * can be streamed. Otherwise it is read whole and the caller checks the size.
+ */
+async function readBytes(response: Response, limit: number): Promise<Uint8Array> {
+  if (typeof response.body?.getReader === 'function') {
+    const reader = response.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > limit) {
+        await reader.cancel().catch(() => {});
+        throw new SpecSourceError('too-large');
+      }
+      chunks.push(value);
+    }
+    const bytes = new Uint8Array(size);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    return bytes;
+  }
   if (typeof response.arrayBuffer === 'function') {
     return new Uint8Array(await response.arrayBuffer());
   }

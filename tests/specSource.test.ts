@@ -233,6 +233,83 @@ describe('ConfluenceSpecSource.loadAttachment', () => {
     expect(request).toHaveBeenCalledTimes(1);
   });
 
+  it.each([
+    ['missing', { fileSize: undefined }],
+    ['a string', { fileSize: '1000' }],
+    ['negative', { fileSize: -1 }],
+  ])('does not download an attachment whose size is %s', async (_, size) => {
+    const { request, source } = confluence(() => json(meta(size)));
+    const err = await source.loadAttachment('123', 'att1').catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(SpecSourceError);
+    expect((err as SpecSourceError).code).toBe('failed');
+    expect((err as SpecSourceError).message).toBe('Confluence did not report the attachment size.');
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not read a download whose Content-Length is over the limit', async () => {
+    const response = new Response(petstore, { headers: { 'Content-Length': '3000000' } });
+    const { source } = confluence((path) => (path === download ? response : json(meta())));
+    expect(await code(source.loadAttachment('123', 'att1'))).toBe('too-large');
+    expect(response.bodyUsed).toBe(false);
+  });
+
+  /** A body that sends `chunk` `times` times (endlessly without `times`). */
+  function stream(chunk: Uint8Array, times = Infinity) {
+    const cancel = vi.fn();
+    let sent = 0;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (sent++ < times) controller.enqueue(chunk);
+        else controller.close();
+      },
+      cancel,
+    });
+    return { body, cancel, pulled: () => sent };
+  }
+
+  it('stops reading a download as soon as it is over the limit', async () => {
+    // Confluence reported 1000 bytes, but the body does not end.
+    const endless = stream(new Uint8Array(512 * 1024).fill(0x20));
+    const { source } = confluence((path) =>
+      path === download ? new Response(endless.body) : json(meta()),
+    );
+    expect(await code(source.loadAttachment('123', 'att1'))).toBe('too-large');
+    expect(endless.cancel).toHaveBeenCalledTimes(1);
+    expect(endless.pulled()).toBeLessThanOrEqual(6);
+  });
+
+  it('reads a streamed download in chunks', async () => {
+    const bytes = new TextEncoder().encode(petstore);
+    const half = Math.ceil(bytes.length / 2);
+    const chunks = [bytes.slice(0, half), bytes.slice(half)];
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        const next = chunks.shift();
+        if (next) controller.enqueue(next);
+        else controller.close();
+      },
+    });
+    const { source } = confluence((path) =>
+      path === download ? new Response(body) : json(meta()),
+    );
+    await expect(source.loadAttachment('123', 'att1')).resolves.toBe(petstore);
+  });
+
+  it('checks the size of a download without a stream after reading it', async () => {
+    const bridgeLike = (text: string) =>
+      ({
+        ok: true,
+        status: 200,
+        arrayBuffer: async () => new TextEncoder().encode(text).buffer,
+      }) as unknown as Response;
+    const small = confluence((path) => (path === download ? bridgeLike(petstore) : json(meta())));
+    await expect(small.source.loadAttachment('123', 'att1')).resolves.toBe(petstore);
+    const big = confluence((path) =>
+      path === download ? bridgeLike('x'.repeat(MAX_SPEC_BYTES + 1)) : json(meta()),
+    );
+    expect(await code(big.source.loadAttachment('123', 'att1'))).toBe('too-large');
+  });
+
   it('rejects downloads that turn out too large or binary', async () => {
     const big = confluence((path) =>
       path === download ? new Response('x'.repeat(MAX_SPEC_BYTES + 1)) : json(meta()),
