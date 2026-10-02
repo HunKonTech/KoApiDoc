@@ -39,10 +39,12 @@ not back-ported.
   - `$ref`s to other files or URLs are never fetched; they are replaced by a placeholder.
   - YAML documents that expand to more than 2,000,000 values through aliases ("billion laughs")
     are rejected before anything walks them, so a page cannot freeze its readers' browsers.
-  - A Content Security Policy in the macro page blocks remote images (tracking pixels) and
-    plugins, in addition to the CSP of the Forge platform:
-    `img-src 'self' data: blob:; object-src 'none'; base-uri 'self'`.
-  - "Try it out" is disabled: no request is ever sent to the API described by a specification.
+  - A Content Security Policy in the macro page, in addition to the CSP of the Forge platform,
+    blocks remote images (tracking pixels), requests to other hosts, frames, form posts and
+    plugins (`default-src 'self'`, `connect-src 'self'`, `frame-src 'none'`,
+    `form-action 'none'`, `object-src 'none'`; see `static/macro-ui/vite.config.ts`).
+  - "Try it out" and the "Authorize" dialog are disabled: no request is ever sent to the API
+    described by a specification or to its authorization or token URLs.
 - **Input checks.** Page and attachment IDs are validated before they become part of a REST path;
   pagination only follows links on the same API; attachments above 2 MB, binary files and
   attachments of other pages are rejected before or after download.

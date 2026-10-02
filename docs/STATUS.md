@@ -69,6 +69,6 @@ A 4. lépés a javasolt alapértékeket rögzítette (`MARKETPLACE-LISTING.md` 1
 3. **Atlassian Developer Community-fiók (D6):** a te regisztrációd kell.
 4. **Jogász:** a `LICENSE` mint EULA és a `PRIVACY.md` átnézése a beküldés előtt.
 5. **Biztonsági kapcsolat:** most csak GitHub private vulnerability reporting (publikus repó kell hozzá); ha szeretnél külön e-mail-címet, megadod és bekerül.
-6. **`close-external-prs` runner:** `self-hosted` helyett `ubuntu-latest` a publikussá tétel előtt (javaslat).
+6. **`close-external-prs` runner:** kész, `ubuntu-latest` (KOA-05, `docs/security/REMEDIATION-PLAN.md`). A self-hosted runnert a repó beállításaiban le kell választani.
 7. Mikor menjen az első push (5. lépés): a repó a beküldéshez szükséges anyaggal kész; a mock-képek elégségesek, valós képek az 5. lépés után opcionálisak.
 8. A GitHub-beállítások (a `main` védelme, collaborator lista, private vulnerability reporting), ha még nem történt meg.

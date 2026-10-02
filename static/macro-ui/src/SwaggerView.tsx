@@ -31,7 +31,7 @@ export default function SwaggerView({ spec, options }: Props) {
         // -1 hides the "Schemas" section completely.
         defaultModelsExpandDepth={options.showSchemas ? 1 : -1}
         filter={options.filter}
-        plugins={[searchPlugin]}
+        plugins={[searchPlugin, readOnlyPlugin]}
         onComplete={() => {
           // Time until the definition is loaded and laid out; read by the e2e performance check.
           requestAnimationFrame(() => {
@@ -103,3 +103,19 @@ function FilterContainer({ layoutSelectors, layoutActions, specSelectors }: Filt
 }
 
 const searchPlugin = { fn: { opsFilter }, components: { FilterContainer } };
+
+/**
+ * Hides the "Authorize" dialog and the lock buttons. `supportedSubmitMethods` only turns off
+ * "Try it out": with security schemes in the spec, Swagger UI would still open the spec's
+ * authorization URL in a popup and post what the reader types to the spec's token URL.
+ */
+const hidden = () => null;
+const readOnlyPlugin = {
+  components: {
+    AuthorizeBtnContainer: hidden,
+    authorizeBtn: hidden,
+    authorizeOperationBtn: hidden,
+    authorizationPopup: hidden,
+    auths: hidden,
+  },
+};
