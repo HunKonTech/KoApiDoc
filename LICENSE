@@ -1,0 +1,64 @@
+KoApiDoc License (Free Use, No Modification)
+Version 1.0
+
+Copyright (c) 2026 Koncsik Benedek. All rights reserved.
+
+This software is source-available, NOT open source. You may read and use it
+free of charge, but you may not change or redistribute it without written
+permission from the Licensor.
+
+1. Definitions
+   "Software" means the KoApiDoc source code, binaries, documentation and all
+   related files in this repository and in any official release.
+   "Licensor" means Koncsik Benedek, the copyright holder.
+   "You" means any person or organization using the Software.
+
+2. Grant
+   The Licensor grants You a worldwide, non-exclusive, royalty-free,
+   non-transferable license to install and use the unmodified Software, for
+   any purpose including commercial use, and to make copies of it solely as
+   needed for that use (including backups and installation on Your own
+   Atlassian sites).
+   You may read the source code for study and security review.
+
+3. Restrictions
+   Without the Licensor's prior written permission You may NOT:
+   a) modify, adapt, translate, or create derivative works of the Software;
+   b) distribute, sublicense, sell, rent, host as a service for others, or
+      publish the Software or any copy of it, including on any marketplace
+      or code hosting service, whether modified or not;
+   c) remove or alter copyright, license or attribution notices;
+   d) use the Licensor's names or marks to endorse a product.
+   Forking solely as technically provided by a code hosting platform is
+   allowed for viewing only; the restrictions above still apply to it.
+
+4. Contributions
+   The Licensor does not accept external contributions. Anything You
+   voluntarily send to the Licensor may be used by the Licensor without
+   restriction or compensation.
+
+5. Third-party components
+   The Software includes third-party components under their own licenses,
+   listed in THIRD_PARTY_NOTICES. Those licenses apply to those components.
+
+6. Termination
+   This license ends automatically if You breach it. Then You must stop using
+   and delete all copies of the Software.
+
+7. No warranty
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NON-INFRINGEMENT.
+
+8. Limitation of liability
+   TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE LICENSOR IS NOT LIABLE FOR ANY
+   DAMAGES ARISING FROM THE USE OF THE SOFTWARE.
+
+9. Governing law
+   This license is governed by the laws of Hungary. Disputes belong to the
+   competent Hungarian courts.
+
+10. Permission requests
+    To ask for permission to modify or redistribute, contact the Licensor via
+    the repository's issue tracker or the contact given in the Marketplace
+    listing.
