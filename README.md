@@ -1,5 +1,7 @@
 # KoApiDoc for Confluence
 
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=github-sponsors&logoColor=white)](https://github.com/sponsors/BenKoncsik)
+
 A Confluence Cloud (Forge) macro that renders an **OpenAPI / Swagger** specification (JSON or YAML) with Swagger UI, directly on a Confluence page. Paste the spec into the macro, or point it at a `.json` / `.yaml` / `.yml` attachment of the page (always the latest version, max. 2 MB).
 
 ![The macro on a page](marketing/screenshots/01-view-light.png)
@@ -28,3 +30,7 @@ KoApiDoc is **source-available, not open source**: free to use (including commer
 ## Feedback
 
 Bugs and ideas: [issues](https://github.com/HunKonTech/KoApiDoc/issues). The source code is in a private repository, and external code contributions are not accepted.
+
+## Sponsor
+
+KoApiDoc is free to use. If it saves you time, you can support its development through [GitHub Sponsors](https://github.com/sponsors/BenKoncsik).
