@@ -26,6 +26,14 @@ also be reported to that project.
 Only the latest version of KoApiDoc on the Atlassian Marketplace is supported. Security fixes are
 not back-ported.
 
+## Security test reports
+
+Every version released on the Atlassian Marketplace is also published under this repository's
+[Releases](https://github.com/HunKonTech/KoApiDoc/releases), with a security test report
+(`security-report-<version>.md`, also shown as the release text): a dependency audit of the
+shipped code and the developer tools (`npm audit`, GitHub Advisory Database) and a static analysis
+of the code (Semgrep). Code findings are listed per rule, without locations.
+
 ## How KoApiDoc limits risk
 
 - **Read-only, minimal permissions.** Two read-only scopes, used to list and download attachments
